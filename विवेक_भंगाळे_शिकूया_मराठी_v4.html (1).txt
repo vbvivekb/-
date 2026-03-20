@@ -1,0 +1,1491 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+<meta charset="UTF-8"/>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>🏮 विवेक भंगाळे सरांचे शिकूया मराठी</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI','Noto Sans Devanagari',Arial,sans-serif;background:#FFF8E7;min-height:100vh}
+.c{cursor:pointer;transition:all 0.15s}.c:hover{transform:translateY(-2px) scale(1.04);box-shadow:0 8px 20px rgba(0,0,0,0.15)!important}.c:active{transform:scale(0.96)}
+.p{animation:pa 0.4s ease}@keyframes pa{0%{transform:scale(1)}35%{transform:scale(1.18)}70%{transform:scale(0.96)}100%{transform:scale(1)}}
+.fi{animation:fi 0.3s ease}@keyframes fi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+::-webkit-scrollbar{width:5px;height:4px}::-webkit-scrollbar-thumb{background:#FFB300;border-radius:3px}
+.nb{display:flex;flex-direction:column;align-items:center;gap:2px;border-radius:10px;cursor:pointer;padding:6px 9px;font-size:11px;border:2px solid transparent;transition:all 0.2s;white-space:nowrap;color:#fff;background:transparent;font-family:inherit}
+.nb.act{background:rgba(255,255,255,0.22);border-color:rgba(255,255,255,0.5);font-weight:800}
+.pbar{height:7px;background:rgba(0,0,0,0.1);border-radius:7px;overflow:hidden}
+.pfill{height:100%;border-radius:7px;transition:width 0.5s}
+nav::-webkit-scrollbar{height:3px}
+.stab{border-radius:20px;padding:5px 13px;cursor:pointer;font-weight:800;font-size:12px;border:2px solid;transition:all 0.15s;font-family:inherit}
+.spk{position:fixed;bottom:18px;right:18px;background:linear-gradient(135deg,#FF6B1A,#BF360C);color:#fff;border:none;border-radius:50%;width:52px;height:52px;font-size:22px;cursor:pointer;box-shadow:0 4px 18px rgba(255,107,26,0.5);z-index:999;display:flex;align-items:center;justify-content:center}
+</style>
+</head>
+<body><div id="app"></div>
+<button class="spk" id="spkBtn" title="आवाज चालू/बंद" onclick="toggleMute()">🔊</button>
+<script>
+// ═══════════════════════════════════════════════
+// NATURAL VOICE ENGINE
+// Google TTS (internet असल्यास) + Web Speech API fallback
+// ═══════════════════════════════════════════════
+var MUTED=false;
+var LANG_PREF='mr'; // mr = Marathi, hi = Hindi
+function toggleMute(){MUTED=!MUTED;document.getElementById('spkBtn').textContent=MUTED?'🔇':'🔊';}
+
+// Google Translate TTS - most natural voice
+var _curAudio=null;
+function stopAudio(){
+  if(_curAudio){try{_curAudio.pause();_curAudio.src="";}catch(e){} _curAudio=null;}
+  if(window.speechSynthesis)speechSynthesis.cancel();
+}
+function googleTTS(text, lang){
+  return new Promise(function(res,rej){
+    var url='https://translate.google.com/translate_tts?ie=UTF-8&q='+encodeURIComponent(text)+'&tl='+lang+'&client=tw-ob';
+    stopAudio();
+    var a=new Audio(url);
+    _curAudio=a;
+    a.onended=function(){_curAudio=null;res();};
+    a.onerror=rej;
+    a.play().catch(rej);
+  });
+}
+
+// Web Speech API fallback - improved natural settings
+var _bestVoice=null;
+function loadVoice(){
+  var vs=window.speechSynthesis?speechSynthesis.getVoices():[];
+  if(!vs.length)return;
+  _bestVoice=
+    vs.find(function(v){return v.lang==='mr-IN';}) ||
+    vs.find(function(v){return v.lang==='hi-IN' && /google/i.test(v.name);}) ||
+    vs.find(function(v){return v.lang==='hi-IN' && v.localService;}) ||
+    vs.find(function(v){return v.lang==='hi-IN';}) ||
+    vs.find(function(v){return v.lang.startsWith('hi');}) ||
+    vs[0]||null;
+}
+if(window.speechSynthesis){
+  loadVoice();
+  speechSynthesis.onvoiceschanged=loadVoice;
+  setTimeout(loadVoice,800);
+}
+function webSpeak(text, isLong){
+  if(!window.speechSynthesis)return;
+  speechSynthesis.cancel();
+  setTimeout(function(){
+    var u=new SpeechSynthesisUtterance(text);
+    if(_bestVoice)u.voice=_bestVoice;
+    u.lang=_bestVoice?_bestVoice.lang:'hi-IN';
+    u.rate=isLong?0.72:0.82; // slower for paragraphs/kavita
+    u.pitch=isLong?1.0:1.05;
+    u.volume=1;
+    speechSynthesis.speak(u);
+  },60);
+}
+var _speakToken=0;
+function speak(text){
+  if(MUTED)return;
+  if(!text)return;
+  _speakToken++;
+  var myToken=_speakToken;
+  stopAudio();
+  if(window.speechSynthesis){speechSynthesis.cancel();}
+  // For long text (kavita/parichhed): try Google TTS with shorter chunk first
+  // Google TTS has 200 char limit - use first meaningful sentence
+  var shortText = text.length > 180 ? text.substring(0,180) : text;
+  googleTTS(shortText, LANG_PREF).catch(function(){
+    if(myToken!==_speakToken)return;
+    if(window.speechSynthesis){speechSynthesis.cancel();}
+    // Web Speech: use slower rate for long text, normal for short
+    webSpeak(text, text.length > 100);
+  });
+}
+
+var PHOTO="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCACgAKADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD6pooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACmTzR28LyzyJFEgLM7sFVR6knpTL26gsrSe6u5Uht4EaSSRzhUUDJJPoBXxB8bPjLqfxA1OTSdC86HQVfEUKcNcEfxv6g9l6D60Alc+jPGnx78F+G4JPJu31W6U4SG0GQx7/OeMe9edN+1L50v+i+HFWP/prcnP6LivCtF+Heo6gEkvpliz/D1P413Gm/Ca2EQ866kB9UGKxdeCdjqjhKjV7WPYtH/aQ0eWVU1jRr20UjJkhdZl/Lg16r4Q8b+HfF8Bk8P6pb3TqMvCDtkT6oeRXyhc/Ca3K/6LfXEZHQk5rnL7wH4h8LXqazompMlzaHzEliyjjH+elNVoMmWFqR1PvaivN/gt8SYPHehpHd7Iddtox9piHAk7eYnse47GvSK1OcKKKKACiiigAooooAKKKKACiiigAooooA8g/at1CSw+DOppGBm7mhtid2MAvuP1+7jHvXyF8OoR57zMOc4BIr61/a10661D4RTGziMv2a9hnlAH3UG5S30BYZPpXyrYynTNNijjJhIT5pAAefasqt3GyN8PZS5n0PXdEDMV+U4B7iuvgjZYyW4FfPianevCFs77V/NA39RgjGc9K6rwTret6ncPaRS3Ny0aZO4AY/EnrXP7LlV7ncsQpu1j2CNHK5xWfqUmyNg65B45rxy58R6t9s2Xd5qqJEW3pBhGAGevXpWhaa8rzRj+0NQl352+c27dj2wKp0na9yFiVzctjlxr954H+JNnf6ZLLBHBcLIyA4DIW+ZT7EZr9BoJVmhSWM5R1DKfUEZFfn58VbI3L2l3DGA5BjOHBL9xgdc196+HA6+H9NWXHmLbRB8HPzBBn9a6YO8Vc4asVGTsaNFFFUZhRRRQAUUUUAFFFFABRRRQAUUUUAfNP7Ven36atZ3azS/wBn3Vm0BTcdu5SSRj3DD8q8n0XTodQxHMo2nivqv476BLr/AMPLyK0tnuLyB0miWMZYc4bAHJ+UnivlqyiudNvGhuI5IZ4ztdHUqwPuDXLVTTZ30GpRVzpT4Z0jTbbz7hpXUDiPcTn8K1vh8mn2+oTyRSwKT2RsjB9TXM69qEkNqXnVzHs/hUtx34rA8P2dleXDS2EOoWzPgHyHEe4e+RgVEU2rs3ulKyR6J4jsdCmuZ3meN1L5YwSYkj9WIHJFWLDwhpwgW4t52n4ypd91cmk9hosxih0O9imkGDKsXmlvXLAVtaJPdW8TeSGW1J+QMMEe1Od4oI8snqtSHUtMQatZpEpEiS53gAlflIzX0Z8I9NudM8E2sd3I8jyu8y7zkhWPH+P414t4a0271rxBCkETvh1Dsqk7QeCc9uM19MxRrFEkcYCogCqB2A6VdGLvdnNiZq3Kh1FFFdJxBRRRQAUUUUAFFFFABRRRQAUUUUAFfOX7ROgxWHiiy1eEgHUoykif7cYA3fipH5V9FTSpBE0krBUUZJNfOX7Rt/Pqz6MUUx28Ty+UP4icLkmpnG8W3sjWi3zpI86g1HYUiuRmMcZq4NM09szR6lcwKecRHmuZjmlUhZ859atou8cSNj2FYRUVqmdknI7rSY9NsYvN/tGS6bHHmms+61DzZ3Ef+rByBXMpaSsw2b39K39G0id3DT5C+lOXJuxR5z6L+EehjSPCcM8hDXN/i5kI7Aj5V/AfqTXbVyvgXVI5vD2nru/drEsef7pXjH6V1VdFraHBJ3buFFFFAgooooAKKKKACiiigAoqG5uobZczOBnoO5rIuNYeQf6Ou1fU8mmot7CbsbUsscS5kcKPesy61lEyIIyxHduBWU1w8hJ3gt3z1qrLPHGxa6dY0Xks7YFaRh3Jcia+uZ77HnthByEXpXnPxf0oXGiafcKuTBdYJ9mUj+YFdfceINOjB8uRpm9I14/M1j6rqP8Ab2nXmnfZfLDRF4W3ZJdecYx7VdSDcGkiqUuWakzxibRxJESF5FLptrFBKFuE+Q98dK62C1+T5hUFxYgHOAea8dO2jPaauNtbRGIMSAL29a1DGIoCQOV5qKwQjGRgCryW0t44t7dCzvwAOw9T7UtW7ILKKuze+Feof8S94pnCorOp3HABDH+hFekwzyKAY5Dt7YORXnehaA1lbtDHIHDOZJHAwGbsB7DH4muhsY7q2mGCxQ9QOlewqd4pvc8SpNc7cdjrYtQYHEihvccVbiu4ZON20+jcVhkkYY07NY2C50NFYUdzJBjYxx6HpWnZ3YuBgja+M49aLDTLVFFFIYVzPjHxC+krHBZqr3Unc8hB/wDXrpq8s8SyfaPFFyTyUfH0CjA/rW1CCnLUmbsjc8ySSBZZyWmZRknuR1p1s/7x4T/Dg5qnZT+bp9sz9UYqfwapFyurEj7rR5/WtbbozuXZYt3I4b1FULu0F0Nlyu9K0g4NO4JFQpNDMAaFbJ/qxj2NZ+pabLARJbBsg5GOxrs2iDDpVeS1BBwaqNULHIM+nagu3UYpLS87zxrlW9yKZN4ZeSMtYzQXa46I2G/I11ZtEPDqrfUUgs7ZMN5SgjnK8GsalCnPXqdFPEzhojgbfTpmujCYzGV+/uBGz611GmaesSlYUKIfvM33n/wHtXSLZqXLv8xIx83JFIIFQ9MVFGnClqtWOviJ1dNkNs4VUYxwKuhQOgpka4Gafmqk7swQjjIpmcinP2pvQUkDI2JJHpU0Ehh8uReqn8xVbIGcGnyHaqLVWEdLG6yIrqcqwyKdWVodxuRoW/h5WtWoas7Fp3IrydLW1mnk+5Ehc/gK8gile4a4vpfvzTZNehePbn7P4cnUHmUhPw6n+VcTDbFdAj45xuz7114ZWXMZ1H0LWiv5llNHnlZCw/GrdrJm5cseVULWRphMMzqeA43f5/nTo7hvtdyvAfg49K1cdWRc6NCpP3hmpgcVzVuySuSzlmB9a2LZ8lVBzWUoWKTNteVFIRTEbin5zXLYorTjHIFVZnxEx9BWkRkVBNCGRhtHIxWkZdwZZSRWUEEcjNIT8x7ioI/LSCNjxlRxR58W7G7G4cEio5ew7lgfMuV4paSIjZ1FLUjA8iopA+PkIB96kLYqKWRR1IGfU1SRLKk8jKUEm0EnHFOaTfJmqN/KJLuKMZ4BJqWFiSSa35dEyb6l+ylMNwjjoG5+ldSDkZHSuPBIQH3rpNKm860GeqfLWNRdS4vocl8TpiYrO2H8ZJx+lVkizpnl4/hqDxzKbrxTb245EQH+P9avwYMW30FdMfdhEh6yMW0j8yBe0sZwPcelZ+qFra5SZRgMNh/pWzBGEuJYz0bkVR16ITWkkUnUjAYVrfUkzbW88hmZhkk5xXS6XcCaASlNjHtXDad5htYjcMHkA+Y+pFdVpl0v2UEnB9Kc1dBsdFbTHd1q/uyM1zUeoRRsCSfwrat7hJoVeNsqa5akLFRZa3egpjgkfM2BULTY6daaGLcsahRHcltlRIlJYsR69qLh4yQGwQRRCiFAc+vFMnZUZSvK98ULcOhNDgRDaOAfWpVbIqGFlWM5JxmlEke75XqWhj2NVrhA6FX+6f0qdj3qjqM3lQkgZJ6AVUFroJmXCP8ASpWZslBsGewzVyA81k2k3mRtLhl8xi+G681oW0mWFdUomaZpkZhIrS8Oy4kMZ6Mv6is0HchpdOm8iaKTsr4P0Nc8ldNGidmf/9k=";
+
+
+// ═══ NUMBERS ═══
+const NUMBERS=[
+  {n:0,m:"शून्य"},{n:1,m:"एक"},{n:2,m:"दोन"},{n:3,m:"तीन"},{n:4,m:"चार"},{n:5,m:"पाच"},
+  {n:6,m:"सहा"},{n:7,m:"सात"},{n:8,m:"आठ"},{n:9,m:"नऊ"},{n:10,m:"दहा"},
+  {n:11,m:"अकरा"},{n:12,m:"बारा"},{n:13,m:"तेरा"},{n:14,m:"चौदा"},{n:15,m:"पंधरा"},
+  {n:16,m:"सोळा"},{n:17,m:"सतरा"},{n:18,m:"अठरा"},{n:19,m:"एकोणीस"},{n:20,m:"वीस"},
+  {n:21,m:"एकवीस"},{n:22,m:"बावीस"},{n:23,m:"तेवीस"},{n:24,m:"चोवीस"},{n:25,m:"पंचवीस"},
+  {n:26,m:"सव्वीस"},{n:27,m:"सत्तावीस"},{n:28,m:"अठ्ठावीस"},{n:29,m:"एकोणतीस"},{n:30,m:"तीस"},
+  {n:31,m:"एकतीस"},{n:32,m:"बत्तीस"},{n:33,m:"तेहतीस"},{n:34,m:"चौतीस"},{n:35,m:"पस्तीस"},
+  {n:36,m:"छत्तीस"},{n:37,m:"सदतीस"},{n:38,m:"अडतीस"},{n:39,m:"एकोणचाळीस"},{n:40,m:"चाळीस"},
+  {n:41,m:"एकेचाळीस"},{n:42,m:"बेचाळीस"},{n:43,m:"त्रेचाळीस"},{n:44,m:"चव्वेचाळीस"},{n:45,m:"पंचेचाळीस"},
+  {n:46,m:"सेहेचाळीस"},{n:47,m:"सत्तेचाळीस"},{n:48,m:"अठ्ठेचाळीस"},{n:49,m:"एकोणपन्नास"},{n:50,m:"पन्नास"},
+  {n:51,m:"एकावन्न"},{n:52,m:"बावन्न"},{n:53,m:"त्रेपन्न"},{n:54,m:"चोपन्न"},{n:55,m:"पंचावन्न"},
+  {n:56,m:"छप्पन्न"},{n:57,m:"सत्तावन्न"},{n:58,m:"अठ्ठावन्न"},{n:59,m:"एकोणसाठ"},{n:60,m:"साठ"},
+  {n:61,m:"एकसष्ट"},{n:62,m:"बासष्ट"},{n:63,m:"त्रेसष्ट"},{n:64,m:"चौसष्ट"},{n:65,m:"पासष्ट"},
+  {n:66,m:"सहासष्ट"},{n:67,m:"सदुसष्ट"},{n:68,m:"अडुसष्ट"},{n:69,m:"एकोणसत्तर"},{n:70,m:"सत्तर"},
+  {n:71,m:"एकाहत्तर"},{n:72,m:"बाहत्तर"},{n:73,m:"त्र्याहत्तर"},{n:74,m:"चौऱ्याहत्तर"},{n:75,m:"पंच्याहत्तर"},
+  {n:76,m:"शहात्तर"},{n:77,m:"सत्त्याहत्तर"},{n:78,m:"अठ्ठ्याहत्तर"},{n:79,m:"एकोणऐंशी"},{n:80,m:"ऐंशी"},
+  {n:81,m:"एक्याऐंशी"},{n:82,m:"ब्याऐंशी"},{n:83,m:"त्र्याऐंशी"},{n:84,m:"चौऱ्याऐंशी"},{n:85,m:"पंच्याऐंशी"},
+  {n:86,m:"शहाऐंशी"},{n:87,m:"सत्त्याऐंशी"},{n:88,m:"अठ्ठ्याऐंशी"},{n:89,m:"एकोणनव्वद"},{n:90,m:"नव्वद"},
+  {n:91,m:"एक्याण्णव"},{n:92,m:"ब्याण्णव"},{n:93,m:"त्र्याण्णव"},{n:94,m:"चौऱ्याण्णव"},{n:95,m:"पंच्याण्णव"},
+  {n:96,m:"शहाण्णव"},{n:97,m:"सत्त्याण्णव"},{n:98,m:"अठ्ठ्याण्णव"},{n:99,m:"नव्याण्णव"},
+  {n:100,m:"शंभर"},{n:200,m:"दोनशे"},{n:300,m:"तीनशे"},{n:400,m:"चारशे"},{n:500,m:"पाचशे"},
+  {n:600,m:"सहाशे"},{n:700,m:"सातशे"},{n:800,m:"आठशे"},{n:900,m:"नऊशे"},
+  {n:1000,m:"एक हजार"},{n:2000,m:"दोन हजार"},{n:5000,m:"पाच हजार"},{n:10000,m:"दहा हजार"},
+  {n:25000,m:"पंचवीस हजार"},{n:50000,m:"पन्नास हजार"},{n:75000,m:"पंच्याहत्तर हजार"},
+  {n:99999,m:"नव्याण्णव हजार नऊशे नव्याण्णव"},
+// ══ अतिरिक्त ══
+{q:"'चतुर' म्हणजे काय?",opts:["मूर्ख","हुशार","आळशी","दयाळू"],ans:1,lv:1},
+{q:"'पहाट' म्हणजे दिवसाची कोणती वेळ?",opts:["दुपार","संध्याकाळ","रात्र","सूर्योदयाची वेळ"],ans:3,lv:2},
+{q:"'विठ्ठल' कोणत्या देवाचे नाव आहे?",opts:["शंकर","विष्णू","गणपती","राम"],ans:1,lv:3},
+
+];
+
+// ═══ SWAR ═══
+const SWAR=[
+  {l:"अ",r:"A",w:"अनार",e:"🍎"},{l:"आ",r:"AA",w:"आंबा",e:"🥭"},
+  {l:"इ",r:"I",w:"इमारत",e:"🏠"},{l:"ई",r:"EE",w:"ईख",e:"🎋"},
+  {l:"उ",r:"U",w:"उंट",e:"🐪"},{l:"ऊ",r:"OO",w:"ऊन",e:"☀️"},
+  {l:"ए",r:"E",w:"एक",e:"1️⃣"},{l:"ऐ",r:"AI",w:"ऐनक",e:"👓"},
+  {l:"ओ",r:"O",w:"ओठ",e:"💋"},{l:"औ",r:"AU",w:"औषध",e:"💊"},
+  {l:"अं",r:"AN",w:"अंगठा",e:"👍"},{l:"अः",r:"AH",w:"अः",e:"🕉️"},
+  {l:"ऋ",r:"RI",w:"ऋषी",e:"🧘"},{l:"ॲ",r:"AE",w:"ॲपल",e:"🍏"},
+];
+
+// ═══ VYANJAN ═══
+const VYANJAN=[
+  {l:"क",r:"KA",w:"कमळ",e:"🪷",g:"क"},{l:"ख",r:"KHA",w:"खरबूज",e:"🍈",g:"क"},
+  {l:"ग",r:"GA",w:"गाय",e:"🐄",g:"क"},{l:"घ",r:"GHA",w:"घर",e:"🏡",g:"क"},{l:"ङ",r:"NGA",w:"ङ",e:"✨",g:"क"},
+  {l:"च",r:"CHA",w:"चंद्र",e:"🌙",g:"च"},{l:"छ",r:"CHHA",w:"छत्री",e:"☂️",g:"च"},
+  {l:"ज",r:"JA",w:"जहाज",e:"🚢",g:"च"},{l:"झ",r:"JHA",w:"झाड",e:"🌳",g:"च"},{l:"ञ",r:"NYA",w:"ञ",e:"✨",g:"च"},
+  {l:"ट",r:"TA",w:"टरबूज",e:"🍉",g:"ट"},{l:"ठ",r:"THA",w:"ठेला",e:"🛒",g:"ट"},
+  {l:"ड",r:"DA",w:"डोंगर",e:"⛰️",g:"ट"},{l:"ढ",r:"DHA",w:"ढोल",e:"🥁",g:"ट"},{l:"ण",r:"NA",w:"ण",e:"✨",g:"ट"},
+  {l:"त",r:"TA",w:"तबला",e:"🪘",g:"त"},{l:"थ",r:"THA",w:"थंड",e:"❄️",g:"त"},
+  {l:"द",r:"DA",w:"दही",e:"🥛",g:"त"},{l:"ध",r:"DHA",w:"धनुष्य",e:"🏹",g:"त"},{l:"न",r:"NA",w:"नदी",e:"🌊",g:"त"},
+  {l:"प",r:"PA",w:"पतंग",e:"🪁",g:"प"},{l:"फ",r:"PHA",w:"फूल",e:"🌸",g:"प"},
+  {l:"ब",r:"BA",w:"बदक",e:"🦆",g:"प"},{l:"भ",r:"BHA",w:"भात",e:"🍚",g:"प"},{l:"म",r:"MA",w:"मासा",e:"🐟",g:"प"},
+  {l:"य",r:"YA",w:"यंत्र",e:"⚙️",g:"य"},{l:"र",r:"RA",w:"रथ",e:"🏇",g:"य"},
+  {l:"ल",r:"LA",w:"लिंबू",e:"🍋",g:"य"},{l:"व",r:"VA",w:"वाघ",e:"🐯",g:"य"},
+  {l:"श",r:"SHA",w:"शेळी",e:"🐐",g:"श"},{l:"ष",r:"SHA",w:"षट्कोण",e:"🔷",g:"श"},
+  {l:"स",r:"SA",w:"सफरचंद",e:"🍎",g:"श"},{l:"ह",r:"HA",w:"हत्ती",e:"🐘",g:"श"},{l:"ळ",r:"LA",w:"ळ",e:"✨",g:"श"},
+  {l:"क्ष",r:"KSHA",w:"क्षमा",e:"🙏",g:"जोड"},{l:"ज्ञ",r:"DNYA",w:"ज्ञान",e:"📚",g:"जोड"},
+];
+const MATRAS=[
+  {s:"",n:"अ",r:"a"},{s:"ा",n:"आ",r:"aa"},{s:"ि",n:"इ",r:"i"},{s:"ी",n:"ई",r:"ee"},
+  {s:"ु",n:"उ",r:"u"},{s:"ू",n:"ऊ",r:"oo"},{s:"े",n:"ए",r:"e"},{s:"ै",n:"ऐ",r:"ai"},
+  {s:"ो",n:"ओ",r:"o"},{s:"ौ",n:"औ",r:"au"},{s:"ं",n:"अं",r:"an"},{s:"ः",n:"अः",r:"ah"},
+];
+
+
+const WORD_CATS=[
+{name:"प्राणी",icon:"🐾",color:"#FF6B35",words:[
+  {w:"कुत्रा",e:"🐕",m:"Dog"},{w:"मांजर",e:"🐈",m:"Cat"},{w:"गाय",e:"🐄",m:"Cow"},{w:"घोडा",e:"🐴",m:"Horse"},
+  {w:"हत्ती",e:"🐘",m:"Elephant"},{w:"वाघ",e:"🐯",m:"Tiger"},{w:"सिंह",e:"🦁",m:"Lion"},{w:"माकड",e:"🐒",m:"Monkey"},
+  {w:"मोर",e:"🦚",m:"Peacock"},{w:"पोपट",e:"🦜",m:"Parrot"},{w:"मासा",e:"🐟",m:"Fish"},{w:"बदक",e:"🦆",m:"Duck"},
+  {w:"ससा",e:"🐇",m:"Rabbit"},{w:"बैल",e:"🐂",m:"Bull"},{w:"म्हैस",e:"🐃",m:"Buffalo"},{w:"शेळी",e:"🐐",m:"Goat"},
+  {w:"मेंढी",e:"🐑",m:"Sheep"},{w:"उंट",e:"🐪",m:"Camel"},{w:"जिराफ",e:"🦒",m:"Giraffe"},{w:"अस्वल",e:"🐻",m:"Bear"},
+  {w:"कोल्हा",e:"🦊",m:"Fox"},{w:"हरण",e:"🦌",m:"Deer"},{w:"घुबड",e:"🦉",m:"Owl"},{w:"बेडूक",e:"🐸",m:"Frog"},
+  {w:"फुलपाखरू",e:"🦋",m:"Butterfly"},{w:"मधमाशी",e:"🐝",m:"Bee"},{w:"मुंगी",e:"🐜",m:"Ant"},{w:"चिमणी",e:"🐦",m:"Sparrow"},
+  {w:"गरुड",e:"🦅",m:"Eagle"},{w:"कबूतर",e:"🕊️",m:"Pigeon"},{w:"कोंबडा",e:"🐓",m:"Rooster"},{w:"साप",e:"🐍",m:"Snake"},
+  {w:"उंदीर",e:"🐭",m:"Mouse"},{w:"खार",e:"🐿️",m:"Squirrel"},{w:"कासव",e:"🐢",m:"Tortoise"},{w:"सरडा",e:"🦎",m:"Lizard"},
+  {w:"चित्ता",e:"🐆",m:"Cheetah"},{w:"बिबट्या",e:"🐆",m:"Leopard"},{w:"हिपोपोटॅमस",e:"🦛",m:"Hippo"},{w:"गेंडा",e:"🦏",m:"Rhino"},
+  {w:"पेंग्विन",e:"🐧",m:"Penguin"},{w:"फ्लेमिंगो",e:"🦩",m:"Flamingo"},{w:"ऑक्टोपस",e:"🐙",m:"Octopus"},{w:"डॉल्फिन",e:"🐬",m:"Dolphin"},
+  {w:"देवमासा",e:"🐋",m:"Whale"},{w:"शार्क",e:"🦈",m:"Shark"},{w:"कोळी",e:"🕷️",m:"Spider"},{w:"विंचू",e:"🦂",m:"Scorpion"},
+  {w:"गोगलगाय",e:"🐌",m:"Snail"},{w:"कावळा",e:"🐦",m:"Crow"},{w:"बगळा",e:"🦢",m:"Crane"},{w:"पेलिकन",e:"🦩",m:"Pelican"},
+  {w:"हंस",e:"🦢",m:"Swan"},{w:"रानडुक्कर",e:"🐗",m:"Wild Boar"},{w:"लांडगा",e:"🐺",m:"Wolf"},{w:"ध्रुवीय अस्वल",e:"🐻",m:"Polar Bear"},
+  {w:"झेब्रा",e:"🦓",m:"Zebra"},{w:"गोरिला",e:"🦍",m:"Gorilla"},{w:"ऑरंगुटान",e:"🦧",m:"Orangutan"},{w:"मगर",e:"🐊",m:"Crocodile"},
+  {w:"पाणघोडा",e:"🦛",m:"Hippo"},{w:"सांबर",e:"🦌",m:"Sambar"},{w:"नीलगाय",e:"🦌",m:"Nilgai"},{w:"काळवीट",e:"🦌",m:"Blackbuck"},
+]},
+{name:"फळे",icon:"🍎",color:"#E91E63",words:[
+  {w:"आंबा",e:"🥭",m:"Mango"},{w:"केळे",e:"🍌",m:"Banana"},{w:"सफरचंद",e:"🍎",m:"Apple"},{w:"द्राक्षे",e:"🍇",m:"Grapes"},
+  {w:"पेरू",e:"🍐",m:"Guava"},{w:"संत्रे",e:"🍊",m:"Orange"},{w:"डाळिंब",e:"🫐",m:"Pomegranate"},{w:"पपई",e:"🍈",m:"Papaya"},
+  {w:"नारळ",e:"🥥",m:"Coconut"},{w:"चिकू",e:"🟫",m:"Chikoo"},{w:"स्ट्रॉबेरी",e:"🍓",m:"Strawberry"},{w:"लिंबू",e:"🍋",m:"Lemon"},
+  {w:"टरबूज",e:"🍉",m:"Watermelon"},{w:"खरबूज",e:"🍈",m:"Muskmelon"},{w:"अंजीर",e:"🟣",m:"Fig"},{w:"जांभूळ",e:"🫐",m:"Jamun"},
+  {w:"आवळा",e:"🟢",m:"Amla"},{w:"नाशपाती",e:"🍐",m:"Pear"},{w:"मोसंबी",e:"🟡",m:"Sweet Lime"},{w:"अननस",e:"🍍",m:"Pineapple"},
+  {w:"सीताफळ",e:"🍏",m:"Custard Apple"},{w:"बोर",e:"🟡",m:"Ber"},{w:"करवंद",e:"⚫",m:"Karwand"},{w:"कवठ",e:"🟤",m:"Wood Apple"},
+  {w:"चेरी",e:"🍒",m:"Cherry"},{w:"किवी",e:"🥝",m:"Kiwi"},{w:"ब्लूबेरी",e:"🫐",m:"Blueberry"},{w:"खजूर",e:"🫙",m:"Dates"},
+  {w:"जर्दाळू",e:"🟠",m:"Apricot"},{w:"पीच",e:"🍑",m:"Peach"},{w:"बेदाणा",e:"🟣",m:"Raisin"},{w:"तरबूज",e:"🍉",m:"Watermelon"},
+  {w:"रामफळ",e:"🍏",m:"Custard Apple"},{w:"आलूबुखारा",e:"🫐",m:"Plum"},{w:"नारंगी",e:"🍊",m:"Tangerine"},{w:"ग्रेपफ्रुट",e:"🍊",m:"Grapefruit"},
+  {w:"तुती",e:"🫐",m:"Mulberry"},{w:"लिची",e:"🔴",m:"Lychee"},{w:"ड्रॅगन फ्रुट",e:"🟣",m:"Dragon Fruit"},{w:"पॅशन फ्रुट",e:"🟡",m:"Passion Fruit"},
+]},
+{name:"भाज्या",icon:"🥦",color:"#4CAF50",words:[
+  {w:"कांदा",e:"🧅",m:"Onion"},{w:"बटाटा",e:"🥔",m:"Potato"},{w:"टोमॅटो",e:"🍅",m:"Tomato"},{w:"गाजर",e:"🥕",m:"Carrot"},
+  {w:"वांगे",e:"🍆",m:"Brinjal"},{w:"कोबी",e:"🥬",m:"Cabbage"},{w:"मिरची",e:"🌶️",m:"Chilli"},{w:"भेंडी",e:"🫑",m:"Okra"},
+  {w:"मेथी",e:"🌿",m:"Fenugreek"},{w:"पालक",e:"🥗",m:"Spinach"},{w:"मका",e:"🌽",m:"Corn"},{w:"काकडी",e:"🥒",m:"Cucumber"},
+  {w:"फ्लॉवर",e:"🥦",m:"Cauliflower"},{w:"लसूण",e:"🧄",m:"Garlic"},{w:"आले",e:"🟡",m:"Ginger"},{w:"हळद",e:"🟡",m:"Turmeric"},
+  {w:"मुळा",e:"⚪",m:"Radish"},{w:"बीट",e:"🔴",m:"Beetroot"},{w:"कोथिंबीर",e:"🌿",m:"Coriander"},{w:"शेवगा",e:"🌿",m:"Drumstick"},
+  {w:"घेवडा",e:"🫘",m:"Beans"},{w:"वाटाणे",e:"🟢",m:"Peas"},{w:"तोंडली",e:"🟢",m:"Tondli"},{w:"दुधी",e:"🟢",m:"Bottle Gourd"},
+  {w:"कारले",e:"🟩",m:"Bitter Gourd"},{w:"परवर",e:"🟢",m:"Pointed Gourd"},{w:"सुरण",e:"🟤",m:"Yam"},{w:"रताळे",e:"🟠",m:"Sweet Potato"},
+  {w:"अळू",e:"🌿",m:"Colocasia"},{w:"शेपू",e:"🌿",m:"Dill"},{w:"पुदिना",e:"🌿",m:"Mint"},{w:"कढीपत्ता",e:"🌿",m:"Curry Leaf"},
+  {w:"कोहळा",e:"🟡",m:"Ash Gourd"},{w:"भोपळा",e:"🎃",m:"Pumpkin"},{w:"वालवड",e:"🫘",m:"Field Beans"},{w:"चवळी",e:"🫘",m:"Cowpea"},
+  {w:"मटकी",e:"🫘",m:"Moth Beans"},{w:"तूर",e:"🫘",m:"Pigeon Pea"},{w:"उडीद",e:"🫘",m:"Black Gram"},{w:"मूग",e:"🟢",m:"Green Gram"},
+]},
+{name:"रंग",icon:"🎨",color:"#9C27B0",words:[
+  {w:"लाल",e:"🔴",m:"Red"},{w:"पिवळा",e:"🟡",m:"Yellow"},{w:"निळा",e:"🔵",m:"Blue"},{w:"हिरवा",e:"🟢",m:"Green"},
+  {w:"पांढरा",e:"⚪",m:"White"},{w:"काळा",e:"⚫",m:"Black"},{w:"नारंगी",e:"🟠",m:"Orange"},{w:"गुलाबी",e:"🩷",m:"Pink"},
+  {w:"जांभळा",e:"🟣",m:"Purple"},{w:"तपकिरी",e:"🟤",m:"Brown"},{w:"राखाडी",e:"🔘",m:"Grey"},{w:"सोनेरी",e:"🟨",m:"Golden"},
+  {w:"चंदेरी",e:"⚪",m:"Silver"},{w:"आसमानी",e:"🩵",m:"Sky Blue"},{w:"भगवा",e:"🟠",m:"Saffron"},{w:"मोरपंखी",e:"🔵",m:"Teal"},
+  {w:"गर्द निळा",e:"🔵",m:"Navy Blue"},{w:"ऑलिव्ह",e:"🟩",m:"Olive"},{w:"मरून",e:"🔴",m:"Maroon"},{w:"लिंबू पिवळा",e:"🟡",m:"Lemon Yellow"},
+  {w:"गडद हिरवा",e:"🟢",m:"Dark Green"},{w:"फिकट निळा",e:"🩵",m:"Light Blue"},{w:"फिकट गुलाबी",e:"🩷",m:"Light Pink"},{w:"क्रीम",e:"🟡",m:"Cream"},
+  {w:"बेज",e:"🟡",m:"Beige"},{w:"स्कारलेट",e:"🔴",m:"Scarlet"},{w:"इंडिगो",e:"🟣",m:"Indigo"},{w:"व्हायलेट",e:"🟣",m:"Violet"},
+  {w:"मॅजेंटा",e:"🩷",m:"Magenta"},{w:"सियान",e:"🩵",m:"Cyan"},{w:"कोरल",e:"🟠",m:"Coral"},{w:"टर्क्वाइज",e:"🩵",m:"Turquoise"},
+]},
+{name:"कुटुंब",icon:"👨‍👩‍👧",color:"#FF9800",words:[
+  {w:"आई",e:"👩",m:"Mother"},{w:"बाबा",e:"👨",m:"Father"},{w:"आजी",e:"👵",m:"Grandmother"},{w:"आजोबा",e:"👴",m:"Grandfather"},
+  {w:"भाऊ",e:"👦",m:"Brother"},{w:"बहीण",e:"👧",m:"Sister"},{w:"काका",e:"👨",m:"Uncle (pat.)"},{w:"काकी",e:"👩",m:"Aunt (pat.)"},
+  {w:"मामा",e:"👨",m:"Uncle (mat.)"},{w:"मामी",e:"👩",m:"Aunt (mat.)"},{w:"मुलगा",e:"👦",m:"Son"},{w:"मुलगी",e:"👧",m:"Daughter"},
+  {w:"नात",e:"👧",m:"Granddaughter"},{w:"नातू",e:"👦",m:"Grandson"},{w:"पती",e:"👨",m:"Husband"},{w:"पत्नी",e:"👩",m:"Wife"},
+  {w:"आत्या",e:"👩",m:"Father's sister"},{w:"मावशी",e:"👩",m:"Mother's sister"},{w:"सासरे",e:"👴",m:"Father-in-law"},{w:"सासू",e:"👵",m:"Mother-in-law"},
+  {w:"दीर",e:"👨",m:"Brother-in-law"},{w:"जाऊ",e:"👩",m:"Sister-in-law"},{w:"नणंद",e:"👩",m:"Husband's sister"},{w:"भाची",e:"👧",m:"Niece"},
+  {w:"भाचा",e:"👦",m:"Nephew"},{w:"पुतण्या",e:"👦",m:"Nephew (pat.)"},{w:"पुतणी",e:"👧",m:"Niece (pat.)"},{w:"आत्येभाऊ",e:"👦",m:"Cousin"},
+  {w:"मावसभाऊ",e:"👦",m:"Cousin (mat.)"},{w:"कुटुंब",e:"👨‍👩‍👧‍👦",m:"Family"},{w:"पणजोबा",e:"👴",m:"Great Grandfather"},{w:"पणजी",e:"👵",m:"Great Grandmother"},
+  {w:"खापर पणजोबा",e:"👴",m:"G.G. Grandfather"},{w:"मुलाचे कुटुंब",e:"👨‍👩‍👧‍👦",m:"Nuclear Family"},{w:"एकत्र कुटुंब",e:"🏠",m:"Joint Family"},{w:"नातेवाईक",e:"👥",m:"Relatives"},
+]},
+{name:"शाळा",icon:"🏫",color:"#2196F3",words:[
+  {w:"शाळा",e:"🏫",m:"School"},{w:"पुस्तक",e:"📚",m:"Book"},{w:"वही",e:"📓",m:"Notebook"},{w:"पेन",e:"🖊️",m:"Pen"},
+  {w:"पेन्सिल",e:"✏️",m:"Pencil"},{w:"खडू",e:"🖍️",m:"Chalk"},{w:"फळा",e:"🟫",m:"Blackboard"},{w:"बॅग",e:"🎒",m:"Bag"},
+  {w:"शिक्षक",e:"👨‍🏫",m:"Teacher"},{w:"परीक्षा",e:"📋",m:"Exam"},{w:"गृहपाठ",e:"📝",m:"Homework"},{w:"रबर",e:"⬜",m:"Eraser"},
+  {w:"कात्री",e:"✂️",m:"Scissors"},{w:"नकाशा",e:"🗺️",m:"Map"},{w:"गणित",e:"🔢",m:"Maths"},{w:"विज्ञान",e:"🔬",m:"Science"},
+  {w:"इतिहास",e:"📜",m:"History"},{w:"भूगोल",e:"🌍",m:"Geography"},{w:"मुख्याध्यापक",e:"👨‍💼",m:"Principal"},{w:"ग्रंथालय",e:"📖",m:"Library"},
+  {w:"वर्गखोली",e:"🏫",m:"Classroom"},{w:"प्रयोगशाळा",e:"🔬",m:"Lab"},{w:"खेळाचे मैदान",e:"⚽",m:"Playground"},{w:"पारितोषिक",e:"🏆",m:"Prize"},
+  {w:"शिष्यवृत्ती",e:"🎓",m:"Scholarship"},{w:"अभ्यास",e:"📖",m:"Study"},{w:"उत्तर",e:"✅",m:"Answer"},{w:"प्रश्न",e:"❓",m:"Question"},
+  {w:"धडा",e:"📄",m:"Lesson"},{w:"अध्याय",e:"📚",m:"Chapter"},{w:"कविता",e:"🎵",m:"Poem"},{w:"निबंध",e:"✍️",m:"Essay"},
+  {w:"व्याकरण",e:"📝",m:"Grammar"},{w:"शब्दकोश",e:"📖",m:"Dictionary"},{w:"संगणक कक्ष",e:"💻",m:"Computer Room"},{w:"क्रीडांगण",e:"🏃",m:"Sports Ground"},
+  {w:"प्रशाला",e:"🏫",m:"School Hall"},{w:"वाचनालय",e:"📚",m:"Reading Room"},{w:"कला वर्ग",e:"🎨",m:"Art Class"},{w:"संगीत वर्ग",e:"🎵",m:"Music Class"},
+]},
+{name:"घर",icon:"🏠",color:"#795548",words:[
+  {w:"घर",e:"🏠",m:"House"},{w:"दरवाजा",e:"🚪",m:"Door"},{w:"खिडकी",e:"🪟",m:"Window"},{w:"स्वयंपाकघर",e:"🍳",m:"Kitchen"},
+  {w:"टेबल",e:"🪑",m:"Table"},{w:"खुर्ची",e:"🪑",m:"Chair"},{w:"आरसा",e:"🪞",m:"Mirror"},{w:"घड्याळ",e:"🕐",m:"Clock"},
+  {w:"दिवा",e:"💡",m:"Lamp"},{w:"पंखा",e:"💨",m:"Fan"},{w:"टीव्ही",e:"📺",m:"TV"},{w:"फ्रिज",e:"🧊",m:"Fridge"},
+  {w:"ताट",e:"🍽️",m:"Plate"},{w:"ग्लास",e:"🥛",m:"Glass"},{w:"झाडू",e:"🧹",m:"Broom"},{w:"बादली",e:"🪣",m:"Bucket"},
+  {w:"साबण",e:"🧼",m:"Soap"},{w:"टॉवेल",e:"🧻",m:"Towel"},{w:"उशी",e:"🛏️",m:"Pillow"},{w:"चादर",e:"🛏️",m:"Bedsheet"},
+  {w:"ब्लँकेट",e:"🛌",m:"Blanket"},{w:"कपाट",e:"🪟",m:"Cupboard"},{w:"सोफा",e:"🛋️",m:"Sofa"},{w:"पलंग",e:"🛏️",m:"Bed"},
+  {w:"अंगण",e:"🌿",m:"Courtyard"},{w:"जिना",e:"🪜",m:"Stairs"},{w:"छत",e:"🏠",m:"Roof"},{w:"भिंत",e:"🧱",m:"Wall"},
+  {w:"व्हरांडा",e:"🏠",m:"Veranda"},{w:"माळा",e:"🏠",m:"Attic"},{w:"तळघर",e:"🕳️",m:"Basement"},{w:"स्नानगृह",e:"🛁",m:"Bathroom"},
+  {w:"संडास",e:"🚽",m:"Toilet"},{w:"माजघर",e:"🏠",m:"Hall"},{w:"ओटा",e:"🍳",m:"Kitchen Counter"},{w:"परडी",e:"🫙",m:"Tray"},
+  {w:"कुलूप",e:"🔒",m:"Lock"},{w:"चाबी",e:"🔑",m:"Key"},{w:"झडप",e:"🚪",m:"Latch"},{w:"झिरमिळे",e:"🪟",m:"Curtain"},
+]},
+{name:"अन्न",icon:"🍛",color:"#FF5722",words:[
+  {w:"भात",e:"🍚",m:"Rice"},{w:"पोळी",e:"🫓",m:"Chapati"},{w:"डाळ",e:"🫘",m:"Dal"},{w:"दूध",e:"🥛",m:"Milk"},
+  {w:"दही",e:"🥛",m:"Curd"},{w:"तूप",e:"🍯",m:"Ghee"},{w:"साखर",e:"🍬",m:"Sugar"},{w:"मीठ",e:"🧂",m:"Salt"},
+  {w:"पाणी",e:"💧",m:"Water"},{w:"चहा",e:"☕",m:"Tea"},{w:"लाडू",e:"🟡",m:"Ladu"},{w:"पुरणपोळी",e:"🫓",m:"Puran Poli"},
+  {w:"वडा",e:"🍩",m:"Vada"},{w:"मिसळ",e:"🍲",m:"Misal"},{w:"भाकरी",e:"🫓",m:"Bhakri"},{w:"श्रीखंड",e:"🍮",m:"Shrikhand"},
+  {w:"बासुंदी",e:"🥛",m:"Basundi"},{w:"आमटी",e:"🍲",m:"Amti"},{w:"कढी",e:"🍲",m:"Kadhi"},{w:"कोशिंबीर",e:"🥗",m:"Koshimbir"},
+  {w:"पापड",e:"🫓",m:"Papad"},{w:"लोणचे",e:"🫙",m:"Pickle"},{w:"चटणी",e:"🫙",m:"Chutney"},{w:"खिचडी",e:"🍲",m:"Khichdi"},
+  {w:"उपमा",e:"🍲",m:"Upma"},{w:"पोहे",e:"🍛",m:"Pohe"},{w:"शिरा",e:"🍮",m:"Shira"},{w:"खीर",e:"🥛",m:"Kheer"},
+  {w:"मोदक",e:"🟡",m:"Modak"},{w:"इडली",e:"🟡",m:"Idli"},{w:"सांबर",e:"🍲",m:"Sambar"},{w:"रसम",e:"🍲",m:"Rasam"},
+  {w:"चपाती",e:"🫓",m:"Chapati"},{w:"परोठा",e:"🫓",m:"Paratha"},{w:"नान",e:"🫓",m:"Naan"},{w:"बिर्याणी",e:"🍛",m:"Biryani"},
+  {w:"पुलाव",e:"🍛",m:"Pulao"},{w:"वांगीभात",e:"🍛",m:"Vangi Bhat"},{w:"मसाले भात",e:"🍛",m:"Masale Bhat"},{w:"वरण",e:"🫘",m:"Varan"},
+  {w:"सूप",e:"🍵",m:"Soup"},{w:"कॉफी",e:"☕",m:"Coffee"},{w:"ज्यूस",e:"🥤",m:"Juice"},{w:"सरबत",e:"🥤",m:"Sharbat"},
+]},
+{name:"वाहन",icon:"🚗",color:"#607D8B",words:[
+  {w:"कार",e:"🚗",m:"Car"},{w:"बस",e:"🚌",m:"Bus"},{w:"रेल्वे",e:"🚂",m:"Train"},{w:"विमान",e:"✈️",m:"Aeroplane"},
+  {w:"जहाज",e:"🚢",m:"Ship"},{w:"सायकल",e:"🚲",m:"Bicycle"},{w:"मोटारसायकल",e:"🏍️",m:"Motorcycle"},{w:"रिक्षा",e:"🛺",m:"Rickshaw"},
+  {w:"ट्रक",e:"🚛",m:"Truck"},{w:"रुग्णवाहिका",e:"🚑",m:"Ambulance"},{w:"हेलिकॉप्टर",e:"🚁",m:"Helicopter"},{w:"नाव",e:"⛵",m:"Boat"},
+  {w:"बैलगाडी",e:"🐂",m:"Bullock Cart"},{w:"ट्रॅक्टर",e:"🚜",m:"Tractor"},{w:"स्कूटर",e:"🛵",m:"Scooter"},{w:"मेट्रो",e:"🚇",m:"Metro"},
+  {w:"टँकर",e:"🚒",m:"Tanker"},{w:"फायर इंजिन",e:"🚒",m:"Fire Engine"},{w:"बुलडोझर",e:"🚧",m:"Bulldozer"},{w:"क्रेन",e:"🏗️",m:"Crane"},
+  {w:"पाणबुडी",e:"🚢",m:"Submarine"},{w:"रॉकेट",e:"🚀",m:"Rocket"},{w:"अंतराळयान",e:"🛸",m:"Spacecraft"},{w:"ट्राम",e:"🚃",m:"Tram"},
+  {w:"मोनोरेल",e:"🚝",m:"Monorail"},{w:"केबल कार",e:"🚡",m:"Cable Car"},{w:"फेरी",e:"⛴️",m:"Ferry"},{w:"स्पीडबोट",e:"🚤",m:"Speedboat"},
+  {w:"पॅराशूट",e:"🪂",m:"Parachute"},{w:"बलून",e:"🎈",m:"Balloon"},{w:"ग्लायडर",e:"🛩️",m:"Glider"},{w:"जेट",e:"✈️",m:"Jet"},
+]},
+{name:"निसर्ग",icon:"🌿",color:"#009688",words:[
+  {w:"झाड",e:"🌳",m:"Tree"},{w:"फूल",e:"🌸",m:"Flower"},{w:"नदी",e:"🌊",m:"River"},{w:"डोंगर",e:"⛰️",m:"Mountain"},
+  {w:"समुद्र",e:"🌊",m:"Sea"},{w:"सूर्य",e:"☀️",m:"Sun"},{w:"चंद्र",e:"🌙",m:"Moon"},{w:"तारा",e:"⭐",m:"Star"},
+  {w:"पाऊस",e:"🌧️",m:"Rain"},{w:"वारा",e:"💨",m:"Wind"},{w:"इंद्रधनुष्य",e:"🌈",m:"Rainbow"},{w:"जंगल",e:"🌲",m:"Forest"},
+  {w:"शेत",e:"🌾",m:"Farm"},{w:"धबधबा",e:"💦",m:"Waterfall"},{w:"वाळवंट",e:"🏜️",m:"Desert"},{w:"गुहा",e:"🕳️",m:"Cave"},
+  {w:"बेट",e:"🏝️",m:"Island"},{w:"तलाव",e:"🌊",m:"Lake"},{w:"झरा",e:"💧",m:"Stream"},{w:"हिमनदी",e:"❄️",m:"Glacier"},
+  {w:"गुलाब",e:"🌹",m:"Rose"},{w:"कमळ",e:"🪷",m:"Lotus"},{w:"झेंडू",e:"🌻",m:"Marigold"},{w:"तुळस",e:"🌿",m:"Tulsi"},
+  {w:"वड",e:"🌳",m:"Banyan"},{w:"पिंपळ",e:"🌳",m:"Peepal"},{w:"बांबू",e:"🎋",m:"Bamboo"},{w:"गहू",e:"🌾",m:"Wheat"},
+  {w:"तांदूळ",e:"🌾",m:"Paddy"},{w:"सूर्यफूल",e:"🌻",m:"Sunflower"},{w:"हिम",e:"❄️",m:"Snow"},{w:"दव",e:"💧",m:"Dew"},
+  {w:"霜雪",e:"❄️",m:"Frost"},{w:"धुके",e:"🌫️",m:"Fog"},{w:"उष्णता",e:"🔥",m:"Heat"},{w:"थंडी",e:"❄️",m:"Cold"},
+  {w:"वीज",e:"⚡",m:"Lightning"},{w:"गडगडाट",e:"🌩️",m:"Thunder"},{w:"वादळ",e:"🌪️",m:"Storm"},{w:"पूर",e:"🌊",m:"Flood"},
+]},
+{name:"शरीर",icon:"🫀",color:"#F44336",words:[
+  {w:"डोळे",e:"👀",m:"Eyes"},{w:"कान",e:"👂",m:"Ears"},{w:"नाक",e:"👃",m:"Nose"},{w:"तोंड",e:"👄",m:"Mouth"},
+  {w:"दात",e:"🦷",m:"Teeth"},{w:"हात",e:"🤚",m:"Hand"},{w:"पाय",e:"🦵",m:"Leg"},{w:"बोट",e:"👆",m:"Finger"},
+  {w:"केस",e:"💇",m:"Hair"},{w:"पोट",e:"🫃",m:"Stomach"},{w:"गुडघा",e:"🦵",m:"Knee"},{w:"खांदा",e:"🫱",m:"Shoulder"},
+  {w:"मान",e:"🧣",m:"Neck"},{w:"चेहरा",e:"😊",m:"Face"},{w:"कपाळ",e:"😊",m:"Forehead"},{w:"गाल",e:"😊",m:"Cheek"},
+  {w:"हनुवटी",e:"😊",m:"Chin"},{w:"नख",e:"💅",m:"Nail"},{w:"जीभ",e:"👅",m:"Tongue"},{w:"ओठ",e:"💋",m:"Lips"},
+  {w:"हृदय",e:"❤️",m:"Heart"},{w:"फुफ्फुस",e:"🫁",m:"Lungs"},{w:"मेंदू",e:"🧠",m:"Brain"},{w:"हाड",e:"🦴",m:"Bone"},
+  {w:"रक्त",e:"🩸",m:"Blood"},{w:"त्वचा",e:"🤚",m:"Skin"},{w:"अंगठा",e:"👍",m:"Thumb"},{w:"मनगट",e:"⌚",m:"Wrist"},
+  {w:"कोपर",e:"💪",m:"Elbow"},{w:"टाच",e:"🦶",m:"Heel"},{w:"पाठ",e:"🫱",m:"Back"},{w:"छाती",e:"💪",m:"Chest"},
+  {w:"कंबर",e:"🫱",m:"Waist"},{w:"मांडी",e:"🦵",m:"Thigh"},{w:"पिंडरी",e:"🦵",m:"Calf"},{w:"घोटा",e:"🦶",m:"Ankle"},
+  {w:"बरगडी",e:"🦴",m:"Rib"},{w:"कशेरुका",e:"🦴",m:"Spine"},{w:"यकृत",e:"🫀",m:"Liver"},{w:"मूत्रपिंड",e:"🫀",m:"Kidney"},
+]},
+{name:"कपडे",icon:"👕",color:"#3F51B5",words:[
+  {w:"शर्ट",e:"👕",m:"Shirt"},{w:"पँट",e:"👖",m:"Pant"},{w:"साडी",e:"🥻",m:"Saree"},{w:"कुर्ता",e:"👘",m:"Kurta"},
+  {w:"फ्रॉक",e:"👗",m:"Frock"},{w:"टोपी",e:"🎩",m:"Cap"},{w:"बूट",e:"👟",m:"Shoes"},{w:"चप्पल",e:"🩴",m:"Slippers"},
+  {w:"मोजे",e:"🧦",m:"Socks"},{w:"स्वेटर",e:"🧥",m:"Sweater"},{w:"रेनकोट",e:"🧥",m:"Raincoat"},{w:"रुमाल",e:"🧣",m:"Handkerchief"},
+  {w:"धोतर",e:"🩱",m:"Dhoti"},{w:"पगडी",e:"🎩",m:"Turban"},{w:"ओढणी",e:"🧣",m:"Dupatta"},{w:"लेहेंगा",e:"👗",m:"Lehenga"},
+  {w:"शेरवानी",e:"🥻",m:"Sherwani"},{w:"पायजमा",e:"👖",m:"Pajama"},{w:"बनियान",e:"👕",m:"Vest"},{w:"हातमोजे",e:"🧤",m:"Gloves"},
+  {w:"स्कार्फ",e:"🧣",m:"Scarf"},{w:"जाकीट",e:"🧥",m:"Jacket"},{w:"कोट",e:"🧥",m:"Coat"},{w:"ब्लाउज",e:"👚",m:"Blouse"},
+  {w:"स्कर्ट",e:"👗",m:"Skirt"},{w:"टी-शर्ट",e:"👕",m:"T-shirt"},{w:"जीन्स",e:"👖",m:"Jeans"},{w:"ट्राउझर",e:"👖",m:"Trousers"},
+  {w:"साडी ब्लाउज",e:"🥻",m:"Saree Blouse"},{w:"नवरी वस्त्र",e:"👗",m:"Bridal Dress"},{w:"गणवेश",e:"👔",m:"Uniform"},{w:"ओव्हरकोट",e:"🧥",m:"Overcoat"},
+]},
+{name:"व्यवसाय",icon:"💼",color:"#5C6BC0",words:[
+  {w:"शेतकरी",e:"👨‍🌾",m:"Farmer"},{w:"डॉक्टर",e:"👨‍⚕️",m:"Doctor"},{w:"शिक्षक",e:"👨‍🏫",m:"Teacher"},{w:"वकील",e:"⚖️",m:"Lawyer"},
+  {w:"पोलीस",e:"👮",m:"Police"},{w:"सैनिक",e:"💂",m:"Soldier"},{w:"इंजिनियर",e:"👷",m:"Engineer"},{w:"वैज्ञानिक",e:"🔬",m:"Scientist"},
+  {w:"लेखक",e:"✍️",m:"Writer"},{w:"कवी",e:"📝",m:"Poet"},{w:"चित्रकार",e:"🎨",m:"Painter"},{w:"संगीतकार",e:"🎵",m:"Musician"},
+  {w:"नट",e:"🎭",m:"Actor"},{w:"खेळाडू",e:"⚽",m:"Athlete"},{w:"व्यापारी",e:"💼",m:"Businessman"},{w:"बँकर",e:"🏦",m:"Banker"},
+  {w:"पत्रकार",e:"📰",m:"Journalist"},{w:"नर्स",e:"👩‍⚕️",m:"Nurse"},{w:"दंतवैद्य",e:"🦷",m:"Dentist"},{w:"विमानचालक",e:"✈️",m:"Pilot"},
+  {w:"आचारी",e:"👨‍🍳",m:"Chef"},{w:"शिंपी",e:"🧵",m:"Tailor"},{w:"सुतार",e:"🔨",m:"Carpenter"},{w:"लोहार",e:"⚒️",m:"Blacksmith"},
+  {w:"कुंभार",e:"🏺",m:"Potter"},{w:"माळी",e:"🌱",m:"Gardener"},{w:"चालक",e:"🚗",m:"Driver"},{w:"रक्षक",e:"💂",m:"Guard"},
+  {w:"परिचारिका",e:"👩‍⚕️",m:"Attendant"},{w:"मुख्यमंत्री",e:"👔",m:"CM"},{w:"प्राध्यापक",e:"👨‍🏫",m:"Professor"},{w:"संशोधक",e:"🔬",m:"Researcher"},
+  {w:"फोटोग्राफर",e:"📷",m:"Photographer"},{w:"वास्तुविशारद",e:"🏗️",m:"Architect"},{w:"अर्थतज्ज्ञ",e:"💹",m:"Economist"},{w:"मानसशास्त्रज्ञ",e:"🧠",m:"Psychologist"},
+  {w:"समाजसेवक",e:"🤝",m:"Social Worker"},{w:"दाई",e:"👩‍⚕️",m:"Midwife"},{w:"सफाई कामगार",e:"🧹",m:"Sanitation Worker"},{w:"विद्युत कामगार",e:"⚡",m:"Electrician"},
+]},
+{name:"भावना",icon:"😊",color:"#E91E63",words:[
+  {w:"आनंद",e:"😊",m:"Joy"},{w:"दुःख",e:"😢",m:"Sorrow"},{w:"राग",e:"😡",m:"Anger"},{w:"भीती",e:"😨",m:"Fear"},
+  {w:"प्रेम",e:"❤️",m:"Love"},{w:"आश्चर्य",e:"😲",m:"Surprise"},{w:"लाज",e:"😳",m:"Shyness"},{w:"उत्साह",e:"🤩",m:"Excitement"},
+  {w:"निराशा",e:"😞",m:"Disappointment"},{w:"समाधान",e:"😌",m:"Satisfaction"},{w:"कृतज्ञता",e:"🙏",m:"Gratitude"},{w:"ईर्ष्या",e:"😒",m:"Jealousy"},
+  {w:"करुणा",e:"🥺",m:"Compassion"},{w:"विश्वास",e:"🤝",m:"Trust"},{w:"अभिमान",e:"🦚",m:"Pride"},{w:"लालसा",e:"😤",m:"Greed"},
+  {w:"शांती",e:"☮️",m:"Peace"},{w:"धैर्य",e:"💪",m:"Courage"},{w:"संयम",e:"🧘",m:"Patience"},{w:"उदारता",e:"🤲",m:"Generosity"},
+  {w:"घृणा",e:"🤢",m:"Disgust"},{w:"चिंता",e:"😟",m:"Worry"},{w:"आशा",e:"🌟",m:"Hope"},{w:"हर्ष",e:"😄",m:"Delight"},
+  {w:"कंटाळा",e:"😑",m:"Boredom"},{w:"एकटेपणा",e:"😔",m:"Loneliness"},{w:"मत्सर",e:"😒",m:"Envy"},{w:"पश्चात्ताप",e:"😔",m:"Regret"},
+  {w:"आसक्ती",e:"❤️",m:"Attachment"},{w:"वेदना",e:"💔",m:"Pain"},{w:"सहानुभूती",e:"🤗",m:"Sympathy"},{w:"निष्काळजीपणा",e:"😶",m:"Carelessness"},
+]},
+{name:"खेळ",icon:"⚽",color:"#EF6C00",words:[
+  {w:"क्रिकेट",e:"🏏",m:"Cricket"},{w:"फुटबॉल",e:"⚽",m:"Football"},{w:"हॉकी",e:"🏑",m:"Hockey"},{w:"बॅडमिंटन",e:"🏸",m:"Badminton"},
+  {w:"टेनिस",e:"🎾",m:"Tennis"},{w:"कबड्डी",e:"🤼",m:"Kabaddi"},{w:"खो-खो",e:"🏃",m:"Kho-Kho"},{w:"कुस्ती",e:"🤼",m:"Wrestling"},
+  {w:"जलतरण",e:"🏊",m:"Swimming"},{w:"धावणे",e:"🏃",m:"Running"},{w:"बुद्धिबळ",e:"♟️",m:"Chess"},{w:"पत्ते",e:"🃏",m:"Cards"},
+  {w:"सापशिडी",e:"🎲",m:"Snakes & Ladders"},{w:"विट्टी-दांडू",e:"🏏",m:"Vitti-Dandu"},{w:"लगोरी",e:"⭕",m:"Lagori"},{w:"गोट्या",e:"⚪",m:"Marbles"},
+  {w:"पतंग",e:"🪁",m:"Kite flying"},{w:"भोवरा",e:"🌀",m:"Top spinning"},{w:"आट्यापाट्या",e:"🤸",m:"Atya-Patya"},{w:"हुतुतू",e:"🤼",m:"Kho-Kho variant"},
+  {w:"बास्केटबॉल",e:"🏀",m:"Basketball"},{w:"व्हॉलीबॉल",e:"🏐",m:"Volleyball"},{w:"टेबल टेनिस",e:"🏓",m:"Table Tennis"},{w:"बिलियर्ड्स",e:"🎱",m:"Billiards"},
+  {w:"बॉक्सिंग",e:"🥊",m:"Boxing"},{w:"जिम्नॅस्टिक्स",e:"🤸",m:"Gymnastics"},{w:"सायकलिंग",e:"🚲",m:"Cycling"},{w:"घोडेस्वारी",e:"🏇",m:"Horse Riding"},
+  {w:"तिरंदाजी",e:"🏹",m:"Archery"},{w:"नेमबाजी",e:"🎯",m:"Shooting"},{w:"कराटे",e:"🥋",m:"Karate"},{w:"जुडो",e:"🥋",m:"Judo"},
+]},
+{name:"तंत्रज्ञान",icon:"💻",color:"#1565C0",words:[
+  {w:"संगणक",e:"💻",m:"Computer"},{w:"मोबाइल",e:"📱",m:"Mobile"},{w:"इंटरनेट",e:"🌐",m:"Internet"},{w:"वेबसाइट",e:"🌐",m:"Website"},
+  {w:"ईमेल",e:"📧",m:"Email"},{w:"सॉफ्टवेअर",e:"💾",m:"Software"},{w:"कीबोर्ड",e:"⌨️",m:"Keyboard"},{w:"माउस",e:"🖱️",m:"Mouse"},
+  {w:"प्रिंटर",e:"🖨️",m:"Printer"},{w:"कॅमेरा",e:"📷",m:"Camera"},{w:"टॅबलेट",e:"📱",m:"Tablet"},{w:"रोबोट",e:"🤖",m:"Robot"},
+  {w:"डेटा",e:"📊",m:"Data"},{w:"प्रोग्रामिंग",e:"👨‍💻",m:"Programming"},{w:"अ‍ॅप",e:"📲",m:"App"},{w:"सोशल मीडिया",e:"📲",m:"Social Media"},
+  {w:"यूट्यूब",e:"▶️",m:"YouTube"},{w:"सर्च इंजिन",e:"🔍",m:"Search Engine"},{w:"ब्लूटूथ",e:"📡",m:"Bluetooth"},{w:"वाय-फाय",e:"📶",m:"WiFi"},
+  {w:"कृत्रिम बुद्धिमत्ता",e:"🤖",m:"AI"},{w:"क्लाउड",e:"☁️",m:"Cloud Computing"},{w:"सायबर सुरक्षा",e:"🔒",m:"Cyber Security"},{w:"ब्लॉकचेन",e:"🔗",m:"Blockchain"},
+  {w:"व्हर्चुअल रिअ‍ॅलिटी",e:"🥽",m:"Virtual Reality"},{w:"ड्रोन",e:"🚁",m:"Drone"},{w:"बायोटेक्नॉलॉजी",e:"🧬",m:"Biotechnology"},{w:"नॅनोटेक्नॉलॉजी",e:"🔬",m:"Nanotechnology"},
+  {w:"सोलार पॅनेल",e:"☀️",m:"Solar Panel"},{w:"इलेक्ट्रिक कार",e:"🚗",m:"Electric Car"},{w:"स्मार्ट होम",e:"🏠",m:"Smart Home"},{w:"डिजिटल पेमेंट",e:"💳",m:"Digital Payment"},
+]},
+{name:"सण-उत्सव",icon:"🎉",color:"#E53935",words:[
+  {w:"दिवाळी",e:"🪔",m:"Diwali"},{w:"होळी",e:"🎨",m:"Holi"},{w:"गणेशचतुर्थी",e:"🙏",m:"Ganesh Chaturthi"},
+  {w:"गुढीपाडवा",e:"🪅",m:"Gudi Padwa"},{w:"दसरा",e:"⚔️",m:"Dussehra"},{w:"मकरसंक्रांती",e:"🌾",m:"Makar Sankranti"},
+  {w:"ईद",e:"🌙",m:"Eid"},{w:"ख्रिसमस",e:"🎄",m:"Christmas"},{w:"नवरात्र",e:"🌺",m:"Navratri"},
+  {w:"रामनवमी",e:"🏹",m:"Ram Navami"},{w:"जन्माष्टमी",e:"🦚",m:"Janmashtami"},{w:"महाशिवरात्री",e:"🕉️",m:"Mahashivratri"},
+  {w:"बुद्धपौर्णिमा",e:"☸️",m:"Buddha Purnima"},{w:"स्वातंत्र्यदिन",e:"🇮🇳",m:"Independence Day"},{w:"प्रजासत्ताकदिन",e:"🪅",m:"Republic Day"},
+  {w:"शिवजयंती",e:"⚔️",m:"Shivaji Jayanti"},{w:"आंबेडकर जयंती",e:"📜",m:"Ambedkar Jayanti"},{w:"वसंतपंचमी",e:"🌸",m:"Vasant Panchami"},
+  {w:"रक्षाबंधन",e:"🪢",m:"Raksha Bandhan"},{w:"भाऊबीज",e:"👫",m:"Bhau Beej"},{w:"नाग पंचमी",e:"🐍",m:"Nag Panchami"},
+  {w:"हरितालिका",e:"🌿",m:"Haritalika"},{w:"पोळा",e:"🐂",m:"Pola"},{w:"वटपौर्णिमा",e:"🌳",m:"Vat Purnima"},
+]},
+{name:"वेळ-काळ",icon:"⏰",color:"#6A1B9A",words:[
+  {w:"सकाळ",e:"🌅",m:"Morning"},{w:"दुपार",e:"☀️",m:"Noon"},{w:"संध्याकाळ",e:"🌆",m:"Evening"},{w:"रात्र",e:"🌙",m:"Night"},
+  {w:"पहाट",e:"🌄",m:"Dawn"},{w:"मध्यरात्र",e:"🕛",m:"Midnight"},{w:"आज",e:"📅",m:"Today"},{w:"उद्या",e:"📅",m:"Tomorrow"},
+  {w:"काल",e:"📅",m:"Yesterday"},{w:"परवा",e:"📅",m:"Day after tomorrow"},{w:"आठवडा",e:"📆",m:"Week"},{w:"महिना",e:"🗓️",m:"Month"},
+  {w:"वर्ष",e:"🎊",m:"Year"},{w:"तास",e:"🕐",m:"Hour"},{w:"मिनिट",e:"⏱️",m:"Minute"},{w:"सेकंद",e:"⏱️",m:"Second"},
+  {w:"सोमवार",e:"📅",m:"Monday"},{w:"मंगळवार",e:"📅",m:"Tuesday"},{w:"बुधवार",e:"📅",m:"Wednesday"},{w:"गुरुवार",e:"📅",m:"Thursday"},
+  {w:"शुक्रवार",e:"📅",m:"Friday"},{w:"शनिवार",e:"📅",m:"Saturday"},{w:"रविवार",e:"📅",m:"Sunday"},
+  {w:"जानेवारी",e:"❄️",m:"January"},{w:"फेब्रुवारी",e:"💝",m:"February"},{w:"मार्च",e:"🌸",m:"March"},
+  {w:"एप्रिल",e:"🌧️",m:"April"},{w:"मे",e:"🌞",m:"May"},{w:"जून",e:"☔",m:"June"},{w:"जुलै",e:"🌊",m:"July"},
+  {w:"ऑगस्ट",e:"🇮🇳",m:"August"},{w:"सप्टेंबर",e:"🍁",m:"September"},{w:"ऑक्टोबर",e:"🎃",m:"October"},
+  {w:"नोव्हेंबर",e:"🍂",m:"November"},{w:"डिसेंबर",e:"🎄",m:"December"},
+]},
+{name:"क्रियापदे",icon:"🏃",color:"#BF360C",words:[
+  {w:"जाणे",e:"🚶",m:"To go"},{w:"येणे",e:"🚶",m:"To come"},{w:"खाणे",e:"🍽️",m:"To eat"},{w:"पिणे",e:"💧",m:"To drink"},
+  {w:"झोपणे",e:"😴",m:"To sleep"},{w:"उठणे",e:"🌅",m:"To wake up"},{w:"बोलणे",e:"🗣️",m:"To speak"},{w:"ऐकणे",e:"👂",m:"To listen"},
+  {w:"पाहणे",e:"👀",m:"To see"},{w:"वाचणे",e:"📖",m:"To read"},{w:"लिहिणे",e:"✍️",m:"To write"},{w:"शिकणे",e:"📚",m:"To learn"},
+  {w:"खेळणे",e:"⚽",m:"To play"},{w:"नाचणे",e:"💃",m:"To dance"},{w:"गाणे",e:"🎵",m:"To sing"},{w:"हसणे",e:"😄",m:"To laugh"},
+  {w:"रडणे",e:"😢",m:"To cry"},{w:"धावणे",e:"🏃",m:"To run"},{w:"चालणे",e:"🚶",m:"To walk"},{w:"उडणे",e:"✈️",m:"To fly"},
+  {w:"पोहणे",e:"🏊",m:"To swim"},{w:"काम करणे",e:"💼",m:"To work"},{w:"शिजवणे",e:"🍳",m:"To cook"},{w:"साफ करणे",e:"🧹",m:"To clean"},
+  {w:"मदत करणे",e:"🤝",m:"To help"},{w:"विचारणे",e:"❓",m:"To ask"},{w:"सांगणे",e:"💬",m:"To tell"},{w:"देणे",e:"🎁",m:"To give"},
+  {w:"घेणे",e:"🤲",m:"To take"},{w:"विसरणे",e:"😶",m:"To forget"},{w:"आठवणे",e:"💭",m:"To remember"},{w:"समजणे",e:"🧠",m:"To understand"},
+  {w:"विचार करणे",e:"🤔",m:"To think"},{w:"बनवणे",e:"🔨",m:"To make"},{w:"तोडणे",e:"💥",m:"To break"},{w:"जोडणे",e:"🔗",m:"To join"},
+  {w:"उघडणे",e:"🔓",m:"To open"},{w:"बंद करणे",e:"🔒",m:"To close"},{w:"आणणे",e:"🤲",m:"To bring"},{w:"पाठवणे",e:"📤",m:"To send"},
+]},
+{name:"विशेषणे",icon:"✨",color:"#AD1457",words:[
+  {w:"मोठा",e:"⬆️",m:"Big"},{w:"लहान",e:"⬇️",m:"Small"},{w:"उंच",e:"🏔️",m:"Tall"},{w:"ठेंगणा",e:"🐾",m:"Short"},
+  {w:"जड",e:"⚖️",m:"Heavy"},{w:"हलका",e:"🪶",m:"Light"},{w:"गरम",e:"🔥",m:"Hot"},{w:"थंड",e:"❄️",m:"Cold"},
+  {w:"जुना",e:"📜",m:"Old"},{w:"नवीन",e:"✨",m:"New"},{w:"स्वच्छ",e:"🧼",m:"Clean"},{w:"घाण",e:"🗑️",m:"Dirty"},
+  {w:"सुंदर",e:"😍",m:"Beautiful"},{w:"कुरूप",e:"😖",m:"Ugly"},{w:"चांगला",e:"👍",m:"Good"},{w:"वाईट",e:"👎",m:"Bad"},
+  {w:"हुशार",e:"🧠",m:"Intelligent"},{w:"मूर्ख",e:"🤪",m:"Foolish"},{w:"श्रीमंत",e:"💰",m:"Rich"},{w:"गरीब",e:"🙏",m:"Poor"},
+  {w:"धाडसी",e:"💪",m:"Brave"},{w:"भ्याड",e:"😨",m:"Coward"},{w:"आळशी",e:"😴",m:"Lazy"},{w:"मेहनती",e:"💪",m:"Hardworking"},
+  {w:"दयाळू",e:"❤️",m:"Kind"},{w:"क्रूर",e:"😡",m:"Cruel"},{w:"खरा",e:"✅",m:"True"},{w:"खोटा",e:"❌",m:"False"},
+  {w:"जवळ",e:"📍",m:"Near"},{w:"दूर",e:"🌍",m:"Far"},{w:"जास्त",e:"⬆️",m:"More"},{w:"कमी",e:"⬇️",m:"Less"},
+  {w:"वेगवान",e:"⚡",m:"Fast"},{w:"मंद",e:"🐢",m:"Slow"},{w:"तीक्ष्ण",e:"🔪",m:"Sharp"},{w:"बोथट",e:"🪨",m:"Blunt"},
+  {w:"कठीण",e:"🪨",m:"Hard"},{w:"मऊ",e:"🪶",m:"Soft"},{w:"रुंद",e:"↔️",m:"Wide"},{w:"अरुंद",e:"↔️",m:"Narrow"},
+]},
+{name:"देश-राज्ये",icon:"🗺️",color:"#1976D2",words:[
+  {w:"भारत",e:"🇮🇳",m:"India"},{w:"महाराष्ट्र",e:"🏔️",m:"Maharashtra"},{w:"मुंबई",e:"🏙️",m:"Mumbai"},
+  {w:"पुणे",e:"🏛️",m:"Pune"},{w:"नागपूर",e:"🌳",m:"Nagpur"},{w:"औरंगाबाद",e:"🏰",m:"Aurangabad"},
+  {w:"कोल्हापूर",e:"🛕",m:"Kolhapur"},{w:"नाशिक",e:"🍇",m:"Nashik"},{w:"सोलापूर",e:"🌾",m:"Solapur"},
+  {w:"सातारा",e:"⛰️",m:"Satara"},{w:"दिल्ली",e:"🏛️",m:"Delhi"},{w:"कोलकाता",e:"🌉",m:"Kolkata"},
+  {w:"चेन्नई",e:"🌊",m:"Chennai"},{w:"बंगलोर",e:"💻",m:"Bangalore"},{w:"हैदराबाद",e:"💎",m:"Hyderabad"},
+  {w:"जयपूर",e:"🏰",m:"Jaipur"},{w:"अहमदाबाद",e:"🏙️",m:"Ahmedabad"},{w:"गोवा",e:"🏖️",m:"Goa"},
+  {w:"काश्मीर",e:"❄️",m:"Kashmir"},{w:"केरळ",e:"🌴",m:"Kerala"},{w:"आसाम",e:"🍵",m:"Assam"},
+  {w:"राजस्थान",e:"🏜️",m:"Rajasthan"},{w:"उत्तर प्रदेश",e:"🕌",m:"Uttar Pradesh"},{w:"मध्य प्रदेश",e:"🌲",m:"Madhya Pradesh"},
+  {w:"चीन",e:"🇨🇳",m:"China"},{w:"अमेरिका",e:"🇺🇸",m:"USA"},{w:"इंग्लंड",e:"🇬🇧",m:"England"},
+  {w:"रशिया",e:"🇷🇺",m:"Russia"},{w:"जपान",e:"🇯🇵",m:"Japan"},{w:"फ्रान्स",e:"🇫🇷",m:"France"},
+  {w:"जर्मनी",e:"🇩🇪",m:"Germany"},{w:"ऑस्ट्रेलिया",e:"🇦🇺",m:"Australia"},
+]},
+];
+
+
+// ═══ SENTENCES 500+ ═══
+const ALL_SENTENCES=[
+// ── स्तर १ ──
+{m:"हे आंबा आहे.",e:"This is a mango.",emoji:"🥭",lv:1},
+{m:"ती मुलगी आहे.",e:"She is a girl.",emoji:"👧",lv:1},
+{m:"तो मुलगा आहे.",e:"He is a boy.",emoji:"👦",lv:1},
+{m:"आई घरी आहे.",e:"Mother is at home.",emoji:"🏠",lv:1},
+{m:"बाबा काम करतात.",e:"Father works.",emoji:"💼",lv:1},
+{m:"मी शाळेत जातो.",e:"I go to school.",emoji:"🏫",lv:1},
+{m:"आकाश निळे आहे.",e:"The sky is blue.",emoji:"🌤️",lv:1},
+{m:"फूल सुंदर आहे.",e:"The flower is beautiful.",emoji:"🌸",lv:1},
+{m:"कुत्रा भुंकतो.",e:"The dog barks.",emoji:"🐕",lv:1},
+{m:"मांजर म्याव करते.",e:"The cat meows.",emoji:"🐈",lv:1},
+{m:"पक्षी उडतात.",e:"Birds fly.",emoji:"🦅",lv:1},
+{m:"मुले खेळतात.",e:"Children play.",emoji:"⚽",lv:1},
+{m:"नदी वाहते.",e:"The river flows.",emoji:"🌊",lv:1},
+{m:"पाऊस पडतो.",e:"It rains.",emoji:"🌧️",lv:1},
+{m:"सूर्य तळपतो.",e:"The sun shines.",emoji:"☀️",lv:1},
+{m:"झाड मोठे आहे.",e:"The tree is big.",emoji:"🌳",lv:1},
+{m:"गाय दूध देते.",e:"The cow gives milk.",emoji:"🐄",lv:1},
+{m:"मला मराठी आवडते.",e:"I like Marathi.",emoji:"❤️",lv:1},
+{m:"मी पाणी पितो.",e:"I drink water.",emoji:"💧",lv:1},
+{m:"ती जेवण करते.",e:"She eats food.",emoji:"🍛",lv:1},
+{m:"आम्ही गाणे गातो.",e:"We sing a song.",emoji:"🎵",lv:1},
+{m:"मी पुस्तक वाचतो.",e:"I read a book.",emoji:"📚",lv:1},
+{m:"बाबा गाडी चालवतात.",e:"Father drives the car.",emoji:"🚗",lv:1},
+{m:"भाऊ खेळतो.",e:"Brother plays.",emoji:"👦",lv:1},
+{m:"बहीण नाचते.",e:"Sister dances.",emoji:"💃",lv:1},
+{m:"सफरचंद लाल आहे.",e:"The apple is red.",emoji:"🍎",lv:1},
+{m:"केळे पिवळे आहे.",e:"The banana is yellow.",emoji:"🍌",lv:1},
+{m:"गवत हिरवे आहे.",e:"The grass is green.",emoji:"🌿",lv:1},
+{m:"दूध पांढरे आहे.",e:"Milk is white.",emoji:"🥛",lv:1},
+{m:"हत्ती मोठा आहे.",e:"The elephant is big.",emoji:"🐘",lv:1},
+{m:"उंदीर लहान आहे.",e:"The mouse is small.",emoji:"🐭",lv:1},
+{m:"मोर सुंदर आहे.",e:"The peacock is beautiful.",emoji:"🦚",lv:1},
+{m:"घोडा धावतो.",e:"The horse runs.",emoji:"🐴",lv:1},
+{m:"बेडूक उडी मारतो.",e:"The frog jumps.",emoji:"🐸",lv:1},
+{m:"मी सकाळी उठतो.",e:"I wake up in the morning.",emoji:"🌅",lv:1},
+{m:"रात्री चंद्र दिसतो.",e:"The moon is seen at night.",emoji:"🌙",lv:1},
+{m:"मला भूक लागली आहे.",e:"I am hungry.",emoji:"😋",lv:1},
+{m:"मला तहान लागली आहे.",e:"I am thirsty.",emoji:"💧",lv:1},
+{m:"मला आनंद झाला.",e:"I am happy.",emoji:"😊",lv:1},
+{m:"हे माझे घर आहे.",e:"This is my house.",emoji:"🏠",lv:1},
+{m:"बागेत फुले आहेत.",e:"There are flowers in the garden.",emoji:"🌸",lv:1},
+{m:"झाडावर पक्षी आहेत.",e:"Birds are on the tree.",emoji:"🐦",lv:1},
+{m:"मी रोज अभ्यास करतो.",e:"I study every day.",emoji:"📖",lv:1},
+{m:"शिक्षक शिकवतात.",e:"The teacher teaches.",emoji:"👨‍🏫",lv:1},
+{m:"मराठी आपली मातृभाषा आहे.",e:"Marathi is our mother tongue.",emoji:"🏮",lv:1},
+{m:"मी सायकल चालवतो.",e:"I ride a bicycle.",emoji:"🚲",lv:1},
+{m:"रेल्वे वेगाने धावते.",e:"The train runs fast.",emoji:"🚂",lv:1},
+{m:"विमान आकाशात उडते.",e:"The aeroplane flies.",emoji:"✈️",lv:1},
+{m:"नदीत मासे आहेत.",e:"There are fish in the river.",emoji:"🐟",lv:1},
+{m:"माझे नाव विवेक आहे.",e:"My name is Vivek.",emoji:"😊",lv:1},
+{m:"आज सोमवार आहे.",e:"Today is Monday.",emoji:"📅",lv:1},
+{m:"उद्या मंगळवार आहे.",e:"Tomorrow is Tuesday.",emoji:"📅",lv:1},
+{m:"काल रविवार होता.",e:"Yesterday was Sunday.",emoji:"📅",lv:1},
+{m:"आजोबा वर्तमानपत्र वाचतात.",e:"Grandfather reads the newspaper.",emoji:"📰",lv:1},
+{m:"आई स्वयंपाक करते.",e:"Mother cooks food.",emoji:"🍳",lv:1},
+{m:"मी आंघोळ करतो.",e:"I take a bath.",emoji:"🛁",lv:1},
+{m:"आम्ही एकत्र जेवतो.",e:"We eat together.",emoji:"🍽️",lv:1},
+{m:"मी झोपतो.",e:"I sleep.",emoji:"😴",lv:1},
+{m:"मुलगी गाणे गाते.",e:"The girl sings a song.",emoji:"🎵",lv:1},
+{m:"मुलगा क्रिकेट खेळतो.",e:"The boy plays cricket.",emoji:"🏏",lv:1},
+{m:"वाघ जंगलात राहतो.",e:"The tiger lives in the jungle.",emoji:"🐯",lv:1},
+{m:"ससा गाजर खातो.",e:"The rabbit eats a carrot.",emoji:"🥕",lv:1},
+{m:"पक्षी घरटे बांधतो.",e:"The bird builds a nest.",emoji:"🐦",lv:1},
+{m:"फुले बागेत फुलतात.",e:"Flowers bloom in the garden.",emoji:"🌸",lv:1},
+{m:"पाऊस पडल्यावर इंद्रधनुष्य दिसते.",e:"Rainbow appears after rain.",emoji:"🌈",lv:1},
+{m:"मी दररोज दात घासतो.",e:"I brush my teeth every day.",emoji:"🦷",lv:1},
+{m:"मला माझा देश आवडतो.",e:"I love my country.",emoji:"🇮🇳",lv:1},
+{m:"पाणी हे जीवन आहे.",e:"Water is life.",emoji:"💧",lv:1},
+{m:"झाडे हवा शुद्ध करतात.",e:"Trees purify the air.",emoji:"🌳",lv:1},
+{m:"सकाळी उठणे चांगले असते.",e:"Waking up early is good.",emoji:"🌅",lv:1},
+{m:"कुत्रा माणसाचा मित्र आहे.",e:"The dog is man's friend.",emoji:"🐕",lv:1},
+{m:"गाय आपल्याला दूध देते.",e:"The cow gives us milk.",emoji:"🐄",lv:1},
+{m:"शेत हिरवे आहे.",e:"The farm is green.",emoji:"🌾",lv:1},
+{m:"बाजारात भाज्या मिळतात.",e:"Vegetables are available in market.",emoji:"🥦",lv:1},
+{m:"पुस्तकालयात अनेक पुस्तके आहेत.",e:"There are many books in the library.",emoji:"📚",lv:1},
+{m:"चांदोबा आकाशात चमकतो.",e:"The moon shines in the sky.",emoji:"🌙",lv:1},
+{m:"तारे रात्री दिसतात.",e:"Stars are seen at night.",emoji:"⭐",lv:1},
+{m:"थंडीत शाल घालतात.",e:"A shawl is worn in winter.",emoji:"🧣",lv:1},
+{m:"पावसाळ्यात छत्री घेतात.",e:"An umbrella is taken in monsoon.",emoji:"☂️",lv:1},
+// ── स्तर २ ──
+{m:"आजी मला गोष्ट सांगते.",e:"Grandmother tells me a story.",emoji:"👵",lv:2},
+{m:"मी काल शाळेत गेलो होतो.",e:"I had gone to school yesterday.",emoji:"🏫",lv:2},
+{m:"उद्या परीक्षा आहे म्हणून मी अभ्यास करत आहे.",e:"There is an exam tomorrow so I am studying.",emoji:"📝",lv:2},
+{m:"पावसाळ्यात शेतकरी आनंदी असतात.",e:"Farmers are happy in monsoon.",emoji:"🌧️",lv:2},
+{m:"मुले खेळत असताना पाऊस आला.",e:"It rained while children were playing.",emoji:"🌧️",lv:2},
+{m:"आमचे घर शाळेपासून जवळ आहे.",e:"Our house is near the school.",emoji:"🏠",lv:2},
+{m:"ती रोज सकाळी व्यायाम करते.",e:"She exercises every morning.",emoji:"🏋️",lv:2},
+{m:"मी माझ्या मित्रांसोबत खेळायला गेलो.",e:"I went to play with my friends.",emoji:"⚽",lv:2},
+{m:"भाऊने पहिला नंबर पटकावला.",e:"Brother secured first rank.",emoji:"🥇",lv:2},
+{m:"आम्ही रविवारी मंदिरात जातो.",e:"We go to the temple on Sunday.",emoji:"🛕",lv:2},
+{m:"दिवाळीत आकाशकंदील लावतात.",e:"Lanterns are lit during Diwali.",emoji:"🪔",lv:2},
+{m:"होळीत रंग खेळतात.",e:"Colors are played on Holi.",emoji:"🎨",lv:2},
+{m:"गुढीपाडव्याला नवीन वर्ष सुरू होते.",e:"New year begins on Gudi Padwa.",emoji:"🪅",lv:2},
+{m:"मकरसंक्रांतीला तिळगूळ देतात.",e:"Tilgul is given on Makar Sankranti.",emoji:"🌸",lv:2},
+{m:"गणपतीत मोदकाचा नैवेद्य दाखवतात.",e:"Modak is offered during Ganpati.",emoji:"🙏",lv:2},
+{m:"स्वातंत्र्यदिनी ध्वजारोहण होते.",e:"Flag hoisting on Independence Day.",emoji:"🇮🇳",lv:2},
+{m:"प्रजासत्ताकदिनी परेड होते.",e:"There is a parade on Republic Day.",emoji:"🪅",lv:2},
+{m:"महाराष्ट्राची राजधानी मुंबई आहे.",e:"Capital of Maharashtra is Mumbai.",emoji:"🏙️",lv:2},
+{m:"पुण्याला महाराष्ट्राची सांस्कृतिक राजधानी म्हणतात.",e:"Pune is called cultural capital of Maharashtra.",emoji:"🏛️",lv:2},
+{m:"सह्याद्री पर्वतरांगा महाराष्ट्रात आहेत.",e:"Sahyadri ranges are in Maharashtra.",emoji:"⛰️",lv:2},
+{m:"मला सकाळी लवकर उठण्याची सवय आहे.",e:"I have a habit of waking up early.",emoji:"🌅",lv:2},
+{m:"तिला रंगकाम करायला आवडते.",e:"She likes to do painting.",emoji:"🎨",lv:2},
+{m:"आपण एकत्र काम केले तर यश मिळते.",e:"Working together leads to success.",emoji:"🤝",lv:2},
+{m:"वेळेचे महत्त्व ओळखणारा माणूस यशस्वी होतो.",e:"A person who values time succeeds.",emoji:"⏰",lv:2},
+{m:"स्वच्छता हे आरोग्याचे मूळ आहे.",e:"Cleanliness is the root of health.",emoji:"🧹",lv:2},
+{m:"शिक्षण हे सर्वात मोठे धन आहे.",e:"Education is the greatest wealth.",emoji:"📚",lv:2},
+{m:"परिश्रम केल्याने यश मिळते.",e:"Hard work leads to success.",emoji:"💪",lv:2},
+{m:"सत्य बोलणे हे सर्वात मोठे धाडस आहे.",e:"Speaking truth is the greatest courage.",emoji:"✊",lv:2},
+{m:"झाडे लावा, झाडे जगवा.",e:"Plant trees, save trees.",emoji:"🌳",lv:2},
+{m:"पाण्याचा अपव्यय करू नये.",e:"Water should not be wasted.",emoji:"💧",lv:2},
+{m:"मोठ्यांना आदर द्यावा.",e:"Elders should be respected.",emoji:"🙏",lv:2},
+{m:"डॉ. आंबेडकर संविधानाचे शिल्पकार आहेत.",e:"Dr. Ambedkar is architect of Constitution.",emoji:"📜",lv:2},
+{m:"महात्मा गांधींनी स्वातंत्र्यासाठी लढले.",e:"Mahatma Gandhi fought for independence.",emoji:"🕊️",lv:2},
+{m:"छत्रपती शिवाजी महाराज मराठ्यांचे राजे होते.",e:"Shivaji Maharaj was king of Marathas.",emoji:"⚔️",lv:2},
+{m:"माझ्या शाळेत दोनशे विद्यार्थी आहेत.",e:"My school has two hundred students.",emoji:"🏫",lv:2},
+{m:"गणेशोत्सवात दहा दिवस उत्सव असतो.",e:"Ganesh festival lasts ten days.",emoji:"🙏",lv:2},
+{m:"पुस्तके वाचल्याने ज्ञान वाढते.",e:"Reading books increases knowledge.",emoji:"📚",lv:2},
+{m:"मित्रांसोबत खेळणे आनंददायी असते.",e:"Playing with friends is enjoyable.",emoji:"⚽",lv:2},
+{m:"आई-बाबांचे ऐकणे आपले कर्तव्य आहे.",e:"Listening to parents is our duty.",emoji:"🙏",lv:2},
+{m:"भारतात अनेक भाषा बोलल्या जातात.",e:"Many languages are spoken in India.",emoji:"🗣️",lv:2},
+{m:"क्रिकेट हा भारतात सर्वाधिक लोकप्रिय खेळ आहे.",e:"Cricket is the most popular sport in India.",emoji:"🏏",lv:2},
+{m:"मुंबई ही भारताची आर्थिक राजधानी आहे.",e:"Mumbai is financial capital of India.",emoji:"🏙️",lv:2},
+{m:"आपल्या मातृभाषेत बोलणे अभिमानाचे आहे.",e:"Speaking in mother tongue is pride.",emoji:"🏮",lv:2},
+{m:"गाईचे दूध आरोग्यासाठी उत्तम असते.",e:"Cow's milk is excellent for health.",emoji:"🐄",lv:2},
+{m:"शाळेत शिस्त पाळणे आवश्यक आहे.",e:"Maintaining discipline is necessary.",emoji:"🏫",lv:2},
+{m:"पर्यावरण वाचवणे आपले कर्तव्य आहे.",e:"Saving environment is our duty.",emoji:"🌍",lv:2},
+{m:"स्त्री शिक्षण समाजाच्या प्रगतीसाठी आवश्यक आहे.",e:"Women's education is essential for progress.",emoji:"👩‍🎓",lv:2},
+{m:"खेळाचा आनंद घेताना नियम पाळावेत.",e:"While enjoying sports, rules must be followed.",emoji:"⚽",lv:2},
+{m:"शेतकरी उन्हातान्हात काम करतो.",e:"Farmers work in hot sun.",emoji:"👨‍🌾",lv:2},
+{m:"आपल्या गावावर आपले प्रेम असावे.",e:"We should love our village.",emoji:"🏘️",lv:2},
+{m:"आई हीच आपली पहिली शिक्षिका असते.",e:"Mother is our first teacher.",emoji:"👩",lv:2},
+// ── स्तर ३ ──
+{m:"मराठी भाषेला एक हजार वर्षांहून अधिक इतिहास आहे.",e:"Marathi language has over a thousand year history.",emoji:"📜",lv:3},
+{m:"पर्यावरण संरक्षण ही आपल्या सर्वांची जबाबदारी आहे.",e:"Environmental protection is responsibility of all.",emoji:"🌍",lv:3},
+{m:"तंत्रज्ञानाच्या विकासामुळे जगाचे रूप पालटले आहे.",e:"Technology has changed the face of the world.",emoji:"💻",lv:3},
+{m:"शिक्षणाशिवाय मानवी जीवन अपूर्ण आहे.",e:"Human life is incomplete without education.",emoji:"📚",lv:3},
+{m:"स्त्री-पुरुष समानता समाजाच्या विकासासाठी आवश्यक आहे.",e:"Gender equality is essential for social development.",emoji:"⚖️",lv:3},
+{m:"भारतीय संविधान देशातील प्रत्येक नागरिकाला मूलभूत अधिकार देते.",e:"Indian Constitution gives fundamental rights to every citizen.",emoji:"📜",lv:3},
+{m:"आरोग्य हे सर्वात मोठे धन असून त्याची काळजी घ्यावी.",e:"Health is greatest wealth and should be taken care of.",emoji:"🏥",lv:3},
+{m:"भाषेतून संस्कृती जपली जाते.",e:"Culture is preserved through language.",emoji:"🗣️",lv:3},
+{m:"लोकशाही व्यवस्थेत मतदान करणे प्रत्येक नागरिकाचे कर्तव्य आहे.",e:"Voting is duty of every citizen in democracy.",emoji:"🗳️",lv:3},
+{m:"जागतिक तापमानवाढ ही सर्वात मोठी पर्यावरणीय समस्या आहे.",e:"Global warming is the biggest environmental problem.",emoji:"🌡️",lv:3},
+{m:"भारत हा विविधतेत एकता असणारा देश आहे.",e:"India is a country with unity in diversity.",emoji:"🇮🇳",lv:3},
+{m:"नैतिकता आणि मूल्ये यांचे पालन केल्याशिवाय समाज टिकत नाही.",e:"Society cannot survive without ethics and values.",emoji:"⚖️",lv:3},
+{m:"मराठी साहित्यात ज्ञानेश्वर, तुकाराम, रामदास यांचे मोठे योगदान आहे.",e:"Dnyaneshwar, Tukaram, Ramdas have great contribution in Marathi literature.",emoji:"📖",lv:3},
+{m:"जलसंधारण करणे काळाची गरज आहे.",e:"Water conservation is the need of the hour.",emoji:"💧",lv:3},
+{m:"महाराष्ट्रातील शेती मुख्यतः पावसावर अवलंबून असते.",e:"Agriculture in Maharashtra mainly depends on rain.",emoji:"🌾",lv:3},
+{m:"आधुनिक तंत्रज्ञानाने अंतरे कमी झाली आहेत.",e:"Modern technology has reduced distances.",emoji:"📱",lv:3},
+{m:"वाचन हे मनाचे खाद्य आहे.",e:"Reading is food for the mind.",emoji:"📚",lv:3},
+{m:"सामाजिक न्याय आणि समता ही लोकशाहीची आधारशिला आहे.",e:"Social justice and equality are cornerstones of democracy.",emoji:"⚖️",lv:3},
+{m:"कला आणि संगीत हे मानवी जीवनाचे अविभाज्य अंग आहेत.",e:"Art and music are inseparable parts of human life.",emoji:"🎨",lv:3},
+{m:"महाराष्ट्राची संत परंपरा अत्यंत समृद्ध आहे.",e:"Maharashtra's saint tradition is very rich.",emoji:"🙏",lv:3},
+// ── स्तर ४ ──
+{m:"ज्ञानेश्वरीमध्ये संत ज्ञानेश्वरांनी भगवद्गीतेचे मराठी भाषांतर केले.",e:"In Dnyaneshwari, Sant Dnyaneshwar translated Bhagavad Gita into Marathi.",emoji:"📖",lv:4},
+{m:"छत्रपती शिवाजी महाराजांनी मराठा साम्राज्याची स्थापना केली.",e:"Shivaji Maharaj established the Maratha empire.",emoji:"⚔️",lv:4},
+{m:"आधुनिक काळात मराठी भाषेला अभिजात भाषेचा दर्जा मिळाला आहे.",e:"Marathi has been given classical language status in modern times.",emoji:"🏛️",lv:4},
+{m:"पर्यावरण संरक्षणासाठी नूतनीकरणयोग्य ऊर्जास्रोतांचा वापर वाढवणे आवश्यक आहे.",e:"Use of renewable energy must be increased for environmental protection.",emoji:"♻️",lv:4},
+{m:"जागतिकीकरणामुळे विविध संस्कृतींमध्ये परस्पर देवाणघेवाण वाढली आहे.",e:"Globalization has increased cultural exchange.",emoji:"🌍",lv:4},
+{m:"भारतीय स्वातंत्र्य लढ्यात महाराष्ट्रातील वीरांनी आपल्या प्राणांचे बलिदान दिले.",e:"Heroes from Maharashtra sacrificed their lives in freedom struggle.",emoji:"🕊️",lv:4},
+{m:"संत तुकारामांच्या अभंगांनी समाजात नैतिक जागृती निर्माण केली.",e:"Sant Tukaram's abhangas created moral awakening in society.",emoji:"🙏",lv:4},
+{m:"लोकमान्य टिळकांनी गणेश उत्सवाला राष्ट्रीय एकतेचे माध्यम बनवले.",e:"Lokmanya Tilak made Ganesh festival a medium of national unity.",emoji:"🙏",lv:4},
+];
+
+
+// ═══ M्हणी - 50 ═══
+const MHANI=[
+{m:"आधी केले मग सांगितले.",a:"प्रथम काम करावे, नंतर बोलावे.",e:"First do, then say.",emoji:"✊"},
+{m:"अति तेथे माती.",a:"कोणत्याही गोष्टीचा अतिरेक हानिकारक असतो.",e:"Excess of anything is harmful.",emoji:"⚠️"},
+{m:"एकी बळकट, भांडण दुर्बळ.",a:"एकत्र राहणे बळकट असते.",e:"Unity is strength.",emoji:"🤝"},
+{m:"शहाण्याला शब्दांचा मार.",a:"बुद्धिमानाला एकच इशारा पुरतो.",e:"A word is enough for the wise.",emoji:"💬"},
+{m:"नाव मोठे लक्षण खोटे.",a:"नाव मोठे असले तरी कृती त्याप्रमाणे नसते.",e:"Great name but hollow deeds.",emoji:"🎭"},
+{m:"खाण तशी माती.",a:"मुलाचे गुण आई-बाबांसारखेच असतात.",e:"Like parents, like children.",emoji:"👨‍👩‍👦"},
+{m:"घरोघरी मातीच्या चुली.",a:"प्रत्येक घरात समस्या असतात.",e:"Every home has its troubles.",emoji:"🏠"},
+{m:"उचलली जीभ लावली टाळ्याला.",a:"विचार न करता बोलणे.",e:"Speaking without thinking.",emoji:"🗣️"},
+{m:"जसे कराल तसे भराल.",a:"आपण जसे वागतो तसेच परत मिळते.",e:"As you sow, so shall you reap.",emoji:"🌾"},
+{m:"दुरून डोंगर साजरे.",a:"दुरून गोष्टी चांगल्या दिसतात.",e:"Distant hills look beautiful.",emoji:"⛰️"},
+{m:"नाचता येईना अंगण वाकडे.",a:"काम येत नाही तेव्हा माध्यमाला दोष देणे.",e:"A bad workman blames tools.",emoji:"💃"},
+{m:"बुडत्याला काडीचा आधार.",a:"संकटात छोटीशी मदतही मोलाची.",e:"A drowning man grasps at a straw.",emoji:"🌾"},
+{m:"थेंबे थेंबे तळे साचे.",a:"छोट्या प्रयत्नांनी मोठे उद्दिष्ट साध्य होते.",e:"Drop by drop a lake is formed.",emoji:"💧"},
+{m:"रात्र थोडी सोंगे फार.",a:"वेळ कमी, करायच्या गोष्टी जास्त.",e:"Too many tasks, too little time.",emoji:"⏰"},
+{m:"ज्याचे जळते त्यालाच कळते.",a:"दुःख भोगणाऱ्यालाच ते कळते.",e:"Only the sufferer knows the pain.",emoji:"🔥"},
+{m:"मन चिंती ते वैरी न चिंती.",a:"माणूस स्वतःच जास्त काळज्या करतो.",e:"The mind worries more than enemies.",emoji:"😟"},
+{m:"विश्वासे तारी, संशयाने मारी.",a:"विश्वासाने माणूस तरतो.",e:"Trust saves, suspicion destroys.",emoji:"🤝"},
+{m:"काखेत कळसा गावाला वळसा.",a:"जी गोष्ट हाताशी आहे ती न बघता दूर शोधणे.",e:"Looking for what is already in hand.",emoji:"🤦"},
+{m:"आपण मेल्याशिवाय स्वर्ग दिसत नाही.",a:"स्वतः प्रयत्न केल्याशिवाय यश मिळत नाही.",e:"No gain without personal effort.",emoji:"🌤️"},
+{m:"लोभापायी गेली माया.",a:"लोभाने सर्व गमावले जाते.",e:"Greed leads to loss.",emoji:"💰"},
+{m:"गर्जेल तो पडेल काय?",a:"रिकाम्या भांड्याचा आवाज जास्त.",e:"Empty vessels make most noise.",emoji:"🔊"},
+{m:"शत्रूचा शत्रू मित्र.",a:"समान शत्रू असलेले एकत्र येतात.",e:"Enemy's enemy is a friend.",emoji:"🤜"},
+{m:"एक ना धड भाराभर चिंध्या.",a:"एकाही गोष्टीत नीट नाही.",e:"Jack of all, master of none.",emoji:"🤷"},
+{m:"खऱ्याला मार नाही.",a:"सत्य कधीही दाबले जात नाही.",e:"Truth always prevails.",emoji:"✅"},
+{m:"चोराच्या मनात चांदणे.",a:"वाईट काम केलेल्याला नेहमी भीती वाटते.",e:"Guilty conscience is fearful.",emoji:"🌙"},
+{m:"माणूस ओळखायचा त्याच्या कामावरून.",a:"खरी ओळख कृतीतून होते.",e:"Know a person by their deeds.",emoji:"👷"},
+{m:"आग सोमेश्वरी, बंब रामेश्वरी.",a:"समस्या एक ठिकाणी, उपाय दुसऱ्या ठिकाणी.",e:"Problem here, solution elsewhere.",emoji:"🔥"},
+{m:"हातावर पोट असणे.",a:"रोजच्या मेहनतीवर जगणे.",e:"Living hand to mouth.",emoji:"🤲"},
+{m:"कामापुरता मामा.",a:"स्वार्थ असेपर्यंत जवळचा.",e:"Friend only when needed.",emoji:"😏"},
+{m:"तेल गेले तूप गेले हाती राहिले धुपाटणे.",a:"जास्त मिळवण्याच्या प्रयत्नात असलेलेही गेले.",e:"Lost all in trying to gain more.",emoji:"😞"},
+{m:"आंधळा मागतो एक डोळा देव देतो दोन.",a:"मागितल्यापेक्षा जास्त मिळणे.",e:"Ask for one, God gives two.",emoji:"😊"},
+{m:"डोळ्यांत तेल घालून राहणे.",a:"अत्यंत सावध आणि सतर्क राहणे.",e:"To be very watchful.",emoji:"👀"},
+{m:"पाण्यात राहून माशाशी वैर नको.",a:"अवलंबून असलेल्यांशी वैर नको.",e:"Don't fight with those you depend on.",emoji:"🐟"},
+{m:"उंटावरून शेळ्या हाकणे.",a:"दुरून सूचना देणे, स्वतः काम न करणे.",e:"Supervising from a distance.",emoji:"🐪"},
+{m:"पोटापुरते पीक काढणे.",a:"फक्त जगण्यापुरतेच मिळवणे.",e:"Earning just enough to survive.",emoji:"🌾"},
+{m:"सरड्याची धाव कुंपणापर्यंत.",a:"प्रत्येकाची क्षमता मर्यादित असते.",e:"Everyone has limits.",emoji:"🦎"},
+{m:"आभाळ कोसळणे.",a:"मोठे संकट येणे.",e:"A huge disaster striking.",emoji:"🌪️"},
+{m:"आकाशाला गवसणी घालणे.",a:"अशक्य गोष्ट करण्याचा प्रयत्न.",e:"Attempting the impossible.",emoji:"🌌"},
+{m:"कान भरणे.",a:"कोणाच्या विरुद्ध विष पेरणे.",e:"Poisoning someone's mind.",emoji:"👂"},
+{m:"घाम गाळणे.",a:"कठोर परिश्रम करणे.",e:"To toil very hard.",emoji:"💦"},
+{m:"डोके खाणे.",a:"सतत बोलून त्रास देणे.",e:"To pester with constant talk.",emoji:"🤦"},
+{m:"आवळा देऊन कोहळा काढणे.",a:"थोडे देऊन जास्त मिळवणे.",e:"Give little, take much.",emoji:"🍈"},
+{m:"रंग बदलणे.",a:"परिस्थितीनुसार वर्तन बदलणे.",e:"To be two-faced.",emoji:"🦎"},
+{m:"मन मोकळे करणे.",a:"मनातील भार दुसऱ्याला सांगून हलके होणे.",e:"To unburden one's heart.",emoji:"😌"},
+{m:"हात झटकणे.",a:"जबाबदारी नाकारणे.",e:"To wash one's hands of responsibility.",emoji:"🤚"},
+{m:"पाठ दाखवणे.",a:"पळ काढणे, धाडस न दाखवणे.",e:"To flee.",emoji:"🏃"},
+{m:"मऊ मेणाहून आम्ही विष्णुदास.",a:"देवासमोर विनम्र असणे.",e:"Being humble before God.",emoji:"🙏"},
+{m:"एका मिठाची गोष्ट.",a:"अगदी क्षुल्लक, मामुली गोष्ट.",e:"A trivial matter.",emoji:"🧂"},
+{m:"माझी माय खाऊ घाली.",a:"आपल्याला जे हवे ते देणाऱ्यावर प्रेम.",e:"We love those who provide for us.",emoji:"👩"},
+{m:"मुठीत असणे.",a:"पूर्णपणे ताब्यात असणे.",e:"To be completely under control.",emoji:"✊"},
+];
+
+// ═══ वाक्प्रचार - 50 ═══
+const VAKPRACHAR=[
+{m:"डोळे उघडणे",a:"सत्य समजणे, वास्तव जाणून घेणे.",e:"To realize the truth.",emoji:"👀"},
+{m:"कान देणे",a:"लक्षपूर्वक ऐकणे.",e:"To pay close attention.",emoji:"👂"},
+{m:"तोंड देणे",a:"समस्येला धाडसाने सामोरे जाणे.",e:"To face boldly.",emoji:"😤"},
+{m:"हात देणे",a:"मदत करणे.",e:"To lend a helping hand.",emoji:"🤝"},
+{m:"पाय काढणे",a:"एखाद्या गोष्टीतून मागे हटणे.",e:"To withdraw.",emoji:"🦶"},
+{m:"पाठ दाखवणे",a:"पळून जाणे, भ्याडपणा दाखवणे.",e:"To run away.",emoji:"🏃"},
+{m:"तोंड लपवणे",a:"लाजेने किंवा भीतीने लपणे.",e:"To hide in shame.",emoji:"😳"},
+{m:"नाक कापणे",a:"अपमान करणे, बेइज्जत करणे.",e:"To insult.",emoji:"👃"},
+{m:"डोक्यावर बसणे",a:"अति स्वातंत्र्य घेणे.",e:"To take undue advantage.",emoji:"😤"},
+{m:"कंबर कसणे",a:"कठोर परिश्रमासाठी तयार होणे.",e:"To gird for hard work.",emoji:"💪"},
+{m:"छाती फुगवणे",a:"अभिमानाने फुगणे, बढाई मारणे.",e:"To boast with pride.",emoji:"😤"},
+{m:"जीव ओवाळणे",a:"स्वतःचा जीव अर्पण करणे.",e:"To sacrifice oneself with love.",emoji:"🌹"},
+{m:"रक्त आटवणे",a:"खूप कष्ट करणे.",e:"To work extremely hard.",emoji:"💪"},
+{m:"घाम गाळणे",a:"परिश्रम करणे.",e:"To toil hard.",emoji:"💦"},
+{m:"डोळे दिपणे",a:"भव्य गोष्टीने थक्क होणे.",e:"To be dazzled.",emoji:"✨"},
+{m:"तोंडाला पाणी सुटणे",a:"एखाद्या गोष्टीची लालसा होणे.",e:"To drool with temptation.",emoji:"😋"},
+{m:"पाणावणे",a:"डोळे भरून येणे.",e:"Eyes filling with tears.",emoji:"😢"},
+{m:"छातीत धस्स होणे",a:"अचानक भीती वाटणे.",e:"To be suddenly frightened.",emoji:"😨"},
+{m:"जीव मेटाकुटीस येणे",a:"खूप थकणे, कंटाळणे.",e:"To be completely exhausted.",emoji:"😩"},
+{m:"उर भरून येणे",a:"भावनांनी मन भरून येणे.",e:"Heart filling with emotion.",emoji:"🥺"},
+{m:"अंगावर काटा येणे",a:"भीतीने किंवा आनंदाने रोमांच येणे.",e:"To get goosebumps.",emoji:"😱"},
+{m:"डोळ्यांत प्राण आणणे",a:"आतुरतेने वाट पाहणे.",e:"To wait eagerly.",emoji:"😍"},
+{m:"मन मोकळे करणे",a:"मनातील गोष्टी बोलून टाकणे.",e:"To unburden one's mind.",emoji:"😌"},
+{m:"तोंडावर पडणे",a:"पूर्णपणे अयशस्वी होणे.",e:"To fail miserably.",emoji:"😔"},
+{m:"नाक खुपसणे",a:"दुसऱ्याच्या गोष्टींत नाहक लक्ष घालणे.",e:"To poke nose in others' affairs.",emoji:"👃"},
+{m:"हात झटकणे",a:"जबाबदारी नाकारणे.",e:"To wash hands of responsibility.",emoji:"🤚"},
+{m:"खांदे उडवणे",a:"बेफिकीरपणा दाखवणे.",e:"To shrug with indifference.",emoji:"🤷"},
+{m:"पाठ थोपटणे",a:"शाबासकी देणे, प्रोत्साहन देणे.",e:"To encourage.",emoji:"👏"},
+{m:"डोके खाजवणे",a:"विचार करणे, गोंधळणे.",e:"To scratch head while thinking.",emoji:"🤔"},
+{m:"कान टोचणे",a:"कठोर इशारा देणे.",e:"To give a firm warning.",emoji:"👂"},
+{m:"पाय रोवणे",a:"ठाम उभे राहणे.",e:"To stand one's ground.",emoji:"🦶"},
+{m:"आकाश पाताळ एक करणे",a:"शक्य ते सर्व प्रयत्न करणे.",e:"To leave no stone unturned.",emoji:"🌍"},
+{m:"दगड होणे",a:"भावनाशून्य होणे.",e:"To become hard-hearted.",emoji:"🪨"},
+{m:"आभाळ कोसळणे",a:"मोठे संकट येणे.",e:"To face a huge disaster.",emoji:"🌪️"},
+{m:"गळ्यात पडणे",a:"ओझे बनणे, भार होणे.",e:"To become a burden.",emoji:"😮"},
+{m:"तोंडघशी पडणे",a:"पूर्णपणे अपयशी होणे.",e:"To fall flat on face.",emoji:"😞"},
+{m:"हवेत उडणे",a:"वास्तवाशी संपर्क नसणे.",e:"To be unrealistic.",emoji:"🌬️"},
+{m:"जमिनीवर पाय असणे",a:"व्यावहारिक असणे.",e:"To be grounded.",emoji:"🦶"},
+{m:"डोळे मिटून विश्वास ठेवणे",a:"कोणतीही शंका न घेता विश्वास ठेवणे.",e:"To trust blindly.",emoji:"🙈"},
+{m:"रंग उडणे",a:"भीतीने चेहरा पांढरा पडणे.",e:"Face turning pale with fear.",emoji:"😰"},
+{m:"सोन्याचा घास भरणे",a:"अत्यंत प्रेमाने जेवण देणे.",e:"To feed with great love.",emoji:"🍚"},
+{m:"तोंड काळे करणे",a:"लाजिरवाणे काम करणे.",e:"To do something shameful.",emoji:"😶"},
+{m:"लोखंडासारखे होणे",a:"खूप कणखर बनणे.",e:"To become very strong.",emoji:"💪"},
+{m:"डोळ्यांपुढे अंधारी येणे",a:"चक्कर येणे, खूप त्रास होणे.",e:"To feel dizzy.",emoji:"😵"},
+{m:"हातची संधी जाणे",a:"मिळालेली संधी गमावणे.",e:"To miss an opportunity.",emoji:"😔"},
+{m:"काळीज जड होणे",a:"मन दुःखाने भरणे.",e:"Heart becoming heavy with sorrow.",emoji:"💔"},
+{m:"मनात घर करणे",a:"मनात खोलवर स्थान मिळवणे.",e:"To find place deep in heart.",emoji:"❤️"},
+{m:"आगीतून फुफाट्यात पडणे",a:"एका संकटातून दुसऱ्या संकटात जाणे.",e:"Out of frying pan into fire.",emoji:"🔥"},
+{m:"वाटेला जाणे",a:"स्वतःच्या मार्गाने जाणे.",e:"To go one's own way.",emoji:"🛤️"},
+{m:"मुठीत असणे",a:"पूर्णपणे ताब्यात असणे.",e:"To be completely under control.",emoji:"✊"},
+];
+
+// ═══ KAVITA - 54 ═══
+var KAVITA=[
+{"title":"पसायदान","kavi":"संत ज्ञानेश्वर","emoji":"🙏","lines":"आता विश्वात्मके देवे। येणे वाग्यज्ञे तोषावे।\nतोषोनि मज द्यावे। पसायदान हे।।\nजे खळांची व्यंकटी सांडो। तया सत्कर्मी रती वाढो।\nभूतां परस्परे जडो। मैत्र जीवांचे।।\nदुरितांचे तिमिर जावो। विश्व स्वधर्म सूर्ये पाहो।\nजो जे वांछील तो ते लाहो। प्राणिजात।।","a":"देवाने या वाणीयज्ञाने तृप्त व्हावे व मला पसायदान द्यावे. दुष्टांची दुष्टता नाहीशी होवो, सत्कर्मात रती वाढो, प्राण्यांमध्ये मैत्री जडो."},
+{"title":"माझा मराठाची बोलु कौतुके","kavi":"संत ज्ञानेश्वर","emoji":"🏮","lines":"माझा मराठाची बोलु कौतुके।\nपरि अमृतातेहि पैजा जिंके।\nऐसी अक्षरे रसिके। मेळवीन।।\nआणि येथ संतु सज्जनु। जे कोणी असती सज्जन।\nते माझे गुरु जाण। सर्वस्वे।।","a":"माझ्या मराठी भाषेबद्दल कौतुकाने सांगतो — ती अमृतालाही पैज जिंकते. अशी रसिक अक्षरे मी गोळा करीन."},
+{"title":"जे का रंजले गांजले","kavi":"संत तुकाराम","emoji":"🤝","lines":"जे का रंजले गांजले। त्यासी म्हणे जो आपुले।\nतोची साधु ओळखावा। देव तेथेची जाणावा।।\nमृदु सबाह्य नवनीत। तैसे सज्जनाचे चित्त।\nज्यासी नाही रे खंत। तोची आवडे भगवंत।।","a":"जे दुःखी लोक आहेत त्यांना जो आपले मानतो, तोच खरा साधू — देव तेथेच असतो. ज्याचे चित्त बाहेर-आत लोण्यासारखे मृदु आहे, त्यालाच भगवंत आवडतो."},
+{"title":"आम्ही जातो आपुल्या गावा","kavi":"संत तुकाराम","emoji":"🌸","lines":"आम्ही जातो आपुल्या गावा। आमुचा रामराम घ्यावा।\nआम्ही जाऊ आपल्या देशा। आमुचा राम राम असा।।\nसंत घरी विसावा। संत घरी विसावा।\nपुढे व्हावे पांडुरंगा। तुम्ही जाल त्याच मार्गा।।","a":"आम्ही आपल्या गावी जातो, आमचा राम राम घ्या. संताच्या घरी विसावा असतो, पांडुरंगाच्या मार्गाने जावे."},
+{"title":"शिवरायांचे आठवावे रूप","kavi":"समर्थ रामदास","emoji":"⚔️","lines":"शिवरायांचे आठवावे रूप। शिवरायांचा आठवावा साक्षेप।\nशिवरायांचा आठवावा प्रताप। भूमंडळी।।\nशिवरायांचे कैसे चालणे। शिवरायांचे कैसे बोलणे।\nशिवरायांचे सर्व सवगणे। आठवावे।।\nशिवरायांचा अनुभव घ्यावा। शिवरायांचा रीतीं स्वभावा।\nशिवरायांची भक्ती नांव। आठवावी।।","a":"शिवाजी महाराजांचे रूप, उद्योग आणि पराक्रम आठवावा. त्यांचे चालणे, बोलणे, सर्व सवगुण आठवावेत."},
+{"title":"मनाचे श्लोक","kavi":"समर्थ रामदास","emoji":"🧘","lines":"मना सज्जना भक्तिपंथेचि जावे।\nतरी श्रीहरी पाविजे भावे।\nजनी निंद्य ते सर्व सोडूनि द्यावे।\nजनी वंद्य ते सर्व भावे करावे।।\nमना पापसंकल्प सोडून द्यावा।\nमना सत्यसंकल्प जीवी धरावा।\nमना कल्पना ते नको वीषयांची।\nविकारे घडे हानि या देहाची।।","a":"हे मना, सज्जनांनी भक्तीच्या मार्गाने जावे. निंद्य गोष्टी सोडून वंद्य गोष्टी कराव्यात. पापसंकल्प सोडून सत्यसंकल्प धरावा."},
+{"title":"ने मजसी ने","kavi":"वीर सावरकर","emoji":"🌊","lines":"ने मजसी ने परत मातृभूमीला। सागरा, प्राण तळमळला।\nभूमातेच्या चरणतला। तुज धुता मज सुख लाहो।।\nप्रिय स्वदेश, माझे घरचे सगे सोयरे। येथे राहती माझे।\nते विसरणे शक्य आहे का? मन मोडी मज माझे।।\nहे शीतल मंद सुगंधी। वायो तूही दगा दिधला।\nमातृभूमीचे दूत म्हणुनी। विश्वास तुज दिधला।।","a":"हे सागरा, मला परत मातृभूमीला घेऊन जा, माझा प्राण तळमळत आहे. प्रिय स्वदेश, आईचे चरण, घरचे सगे सोयरे — हे विसरणे कसे शक्य आहे?"},
+{"title":"बलसागर भारत होवो","kavi":"वीर सावरकर","emoji":"🇮🇳","lines":"बलसागर भारत होवो। विश्वात शोभूनि राहो।\nहे दिव्य भव्य महान भारत। भूमी माझी ही।।\nहिंदुभूमी पुण्यभूमी। माझी माझी ही जन्मभूमी।\nशत जन्मांचे पुण्य फळले। जन्म येथे घेतला।।\nशत करोडी लोक माझे। लढती झुंजती आज माझे।\nअखंड भारत एक व्हावा। हेच माझे स्वप्न आहे।।","a":"भारत बलसागर व्हावा, विश्वात शोभून राहावा — ही माझी दिव्य भूमी आहे. शत जन्मांचे पुण्य फळले म्हणून येथे जन्म मिळाला."},
+{"title":"जय जय महाराष्ट्र माझा","kavi":"राजा बढे","emoji":"🏔️","lines":"जय जय महाराष्ट्र माझा। गर्जा महाराष्ट्र माझा।\nभीमथडी तट राकट देशा। देशा कड्याकपारींचा।।\nघाट मथेचा जो सांधतो। गाव गावांशी नाते जोडतो।\nतो इतिहासाचा साक्षीदार। शिवशंभूचा गड।।\nपुण्यभूमी ही थोरांची। संतमाऊलींची।\nशूर मावळ्यांची भूमी। ही माझी महाराष्ट्रभूमी।।","a":"माझ्या महाराष्ट्राचा जयजयकार असो. भीमा काठावरचा कड्या-कपारींचा देश, संत-शूरांची पुण्यभूमी."},
+{"title":"श्रावणमासी","kavi":"बालकवी","emoji":"🌧️","lines":"श्रावणमासी हर्ष मानसी। हिरवळ दाटे चोहिकडे।\nक्षणात येते सर सर शिरवे। क्षणात फिरूनी ऊन पडे।।\nवरती बघता इंद्रधनुष्य। रम्य त्याची रंगी छटा।\nतेथे मिळतो चित्तास आनंद। मनास त्याची जडे गुंता।।\nउठती वारे वाहती झुळझुळ। शीतल हवा होई मधुर।\nझाडे झुडपे डुलती संगे। तिकडे ओला नभाचा सुर।।","a":"श्रावण महिन्यात मनाला हर्ष होतो, सर्वत्र हिरवळ दाटते. क्षणात पाऊस क्षणात ऊन — वरती इंद्रधनुष्याची रंगी छटा पाहून मन आनंदित होते."},
+{"title":"आनंदी आनंद गडे","kavi":"दासोपंत","emoji":"😊","lines":"आनंदी आनंद गडे। जिकडे तिकडे चोहिकडे।\nवर खाली आणि मधे। आनंदी आनंद गडे।।\nआनंदाचे डोही। आनंद तरंग।\nआनंद कारण। आनंद अंग।।\nदाही दिशा आनंद। जहाले आनंद।\nपरब्रह्म ते आनंद। सर्व आनंद।।","a":"सर्वत्र आनंदच आनंद आहे. आनंदाच्या डोहात आनंदाचे तरंग उठत आहेत. दहीही दिशांनी आनंद भरला आहे."},
+{"title":"तुतारी","kavi":"केशवसुत","emoji":"📯","lines":"एक तुतारी द्या मज आणुनि। फुंकीन मी ती अवखळ मनाने।\nकोण बघतो जगाचे लहानपण। आम्ही मोठे भव्य स्वप्न पाहणे।।\nफुंकीन जोरे तुतारी। देशासाठी बलिदान केले।\nत्या वीरांची गाणी गाऊ। स्वातंत्र्याचे दीप लावू।।\nउठा उठा हो बंधूंनो। वेळ न आता दवडण्याची।\nएक तुतारी द्या मज आणुनि। जागृती करू सकलांची।।","a":"मला एक तुतारी द्या, मी ती उत्साहाने फुंकेन. देशासाठी बलिदान केलेल्या वीरांची गाणी गाऊ, स्वातंत्र्याचे दीप लावू."},
+{"title":"गुरु ब्रह्मा","kavi":"परंपरागत","emoji":"🙏","lines":"गुरु ब्रह्मा गुरु विष्णू। गुरु देवो महेश्वरा।\nगुरु साक्षात परब्रह्म। तस्मै श्री गुरवे नमः।।\nगुरू विना गती नाही। गुरू विना मती नाही।\nगुरू विना ज्ञान नाही। गुरूचरणी शरण जाई।।\nगुरु कृपाच सर्वस्व। गुरु वचनी सत्य असे।\nगुरुशिवाय या जगात। काय काय उरते असे?।।","a":"गुरु हे ब्रह्मा, विष्णू, महेश्वर यांचे रूप आहेत. गुरूशिवाय ज्ञान, गती, मती काहीच नाही. गुरुचरणी शरण जावे."},
+{"title":"आई","kavi":"बालगीत","emoji":"👩","lines":"आई म्हणजे काय असते? आई म्हणजे माया असते.\nआई म्हणजे ममता असते. आई म्हणजे सारे असते।।\nआई असते जवळ आपल्या। सुखदुःखात साथ असते.\nआई शब्दात सर्व आहे। आई जगाची माऊली।।\nआई शिकवते चालायला। आई शिकवते बोलायला।\nआई म्हणजे देव असतो। आईला माझा नमस्कार।।","a":"आई म्हणजे माया, ममता, सर्वस्व आहे. आई सुखदुःखात साथ देते. आई म्हणजे जगाची माऊली, देव आहे."},
+{"title":"चांदोबा चांदोबा","kavi":"बालगीत","emoji":"🌙","lines":"चांदोबा चांदोबा भागलास का? दुधभात खाल्लास का?\nआमच्या घरी येशील का? सोन्याचा कप देईन का।।\nचांदोबा चांदोबा गोल गोल। चमकतो तो हळूहळू।\nरात्री आकाशी येतो तो। सर्वांना प्रकाश देतो।।\nतारे होती त्याचे सोबती। रात्रभर आकाशी नाचती।\nचांदोबा आमचा गोड मित्र। सर्वांना तो आवडतो।।","a":"चांदोबा, भागलास का? दुधभात खाल्लास का? आमच्या घरी ये, सोन्याचा कप देतो. रात्री तारे सोबत आकाशी नाचतो."},
+{"title":"झेंडा उंचावरी","kavi":"गीत","emoji":"🚩","lines":"झेंडा उंचावरी फडकत राहो।\nझेंडा मराठ्यांचा उंच राहो।\nस्वातंत्र्याचा झेंडा फडके। भारत माझा जगात शोभे।।\nलाल पिवळा निळा हिरवा। रंग या झेंड्यावरी।\nहिंदुस्थानचा तिरंगा। फडकतो उंचावरी।।\nझेंडा आमुचा अभिमान। झेंडा आमुचे गान।\nझेंड्याखाली एक होऊ। भारत माझा बलवान।।","a":"मराठ्यांचा झेंडा उंचावरी फडकत राहो. तिरंग्याचे रंग आमचा अभिमान आहेत. झेंड्याखाली एक होऊ."},
+{"title":"दिवाळी","kavi":"बालगीत","emoji":"🪔","lines":"दिवाळी आली दिवाळी। दिव्यांची रांग लावली।\nफटाके उडवू चला। मिठाई वाटू चला।।\nआकाशदिवा लावला। घरोघरी प्रकाश पसरला।\nलक्ष्मीची पूजा करू। आनंदाने साजरी करू।।\nकडकडे फटाके वाजती। दिवे तेवती झगमगती।\nदिवाळीचा आनंद घेऊ। सर्वांना शुभेच्छा देऊ।।","a":"दिवाळी आली, दिव्यांची रांग लावली. फटाके उडवू, मिठाई वाटू. आकाशदिवा लावू, लक्ष्मीपूजन करू."},
+{"title":"शेतकरी राजा","kavi":"बालगीत","emoji":"🌾","lines":"शेतकरी राजा आमचा। अन्नदाता जगाचा।\nमेहनत करतो रात दिवस। देतो धान्य जगासाठी।।\nनांगर धरून राबतो। बी पेरून घाम गाळतो।\nपाऊस-ऊन सहन करून। जगाला अन्न पुरवतो।।\nशेतकऱ्याला नमन करू। त्याचे कष्ट ओळखू।\nशेत-भात-धान्य सारे। त्याच्या घामाने पिकते।।","a":"शेतकरी जगाचा अन्नदाता आहे. तो रात-दिवस राबतो, पाऊस-ऊन सहन करतो. त्याचे कष्ट आपण ओळखावेत."},
+{"title":"माझी शाळा","kavi":"बालगीत","emoji":"🏫","lines":"माझी शाळा गोड शाळा। शाळेत जाऊ चला।\nपुस्तक दप्तर घेऊनी। शाळेत जाऊ चला।।\nशाळेत शिकतो आपण। गणित मराठी विज्ञान।\nशिक्षक शिकवती प्रेमाने। आपण ऐकू मन लावून।।\nशाळेत मित्र भेटती। खेळू गाऊ हसू मिळून।\nशाळा आमची आई आहे। ज्ञानाची खाण आहे।।","a":"माझी शाळा गोड आहे. शाळेत गणित, मराठी, विज्ञान शिकतो. शिक्षक प्रेमाने शिकवतात. शाळा ज्ञानाची खाण आहे."},
+{"title":"सूर्य उगवला","kavi":"बालगीत","emoji":"☀️","lines":"सूर्य उगवला पूर्वेला। प्रकाश पसरला जगाला।\nपक्षी किलबिलती झाडावरी। फुले उमलती वेळावरी।।\nऊठ उठ रे झोपाळू। आळस सोड तू बावळू।\nशाळेत जाण्याची वेळ झाली। आई बोलावी आल्या गेल्या।।\nसकाळ सुंदर झाली आज। कर आता तू आवरण काज।\nलवकर उठ, व्यायाम कर। दिवस सुंदर व्हावा तर।।","a":"सूर्य उगवला, पक्षी किलबिलतात, फुले उमलतात. आळस सोडून उठ, शाळेत जाण्याची वेळ झाली."},
+{"title":"झाड लावा","kavi":"बालगीत","emoji":"🌳","lines":"झाड लावा झाड। झाड आपले सोबती।\nसाऊली देते, फळे देते। झाड आपले मित्र असे।।\nझाडे तोडू नका कधी। पर्यावरण वाचवा सदा।\nझाडे लावणे हे पुण्य आहे। देशाचे हे कर्तव्य आहे।।\nप्राणवायू देते झाड। पाऊस आणते झाड।\nझाड हेच जगण्याचे साधन। झाड लावा, झाड जगवा।।","a":"झाड लावा — ते साऊली, फळे देते, प्राणवायू देते. झाडे तोडू नका. पर्यावरण वाचवणे हे आपले कर्तव्य आहे."},
+{"title":"नदी","kavi":"बालगीत","emoji":"🌊","lines":"नदी वाहते खळखळ। पाणी स्वच्छ निर्मळ।\nमासे खेळती आत। मुले डुंबती प्रीत।।\nनदीकाठी झाडे उभी। थंड छाया देती सभी।\nपक्षी येती पाणी प्यायला। नदी जीव लावते सभाला।।\nनदी प्रदूषित करू नका। तिचे पाणी घाण करू नका।\nनदी ही आपली माऊली। तिला जपा सगळी।।","a":"नदी खळखळ वाहते, पाणी स्वच्छ असते. नदी प्रदूषित करू नका, ती आपली माऊली आहे."},
+{"title":"पाखरू","kavi":"बालगीत","emoji":"🐦","lines":"पाखरू उडते आकाशी। मुक्त स्वच्छंद भासे।\nडाळी डाळी बागडते। गाणे गोड गाते।।\nपंख पसरून उडते दूर। वारा झुळझुळ वाहे पूर।\nफुलांवरी बसते जाऊन। मध गोड पिते घेऊन।।\nपाखरू आपले मित्र आहे। पाखराला त्रास देऊ नका।\nत्याचे घरटे मोडू नका। पाखराला जगू द्या।।","a":"पाखरू आकाशात मुक्तपणे उडते, गाणे गाते. पाखरे आपले मित्र आहेत, त्यांना त्रास देऊ नका."},
+{"title":"गणेशवंदना","kavi":"परंपरागत","emoji":"🐘","lines":"सुखकर्ता दुखहर्ता। वार्ता विघ्नाची।\nनुरवी पुरवी प्रेम कृपा। जयाची सेवा।।\nसर्वांगी सुंदर उटी। शेंदुराची चर्चिता।\nकंठी झळके माळ। मुक्ताफळांची।।\nजय देव जय देव। जय मंगलमूर्ती।\nदर्शनमात्रे मनकामना। पुरती आरती।।","a":"गणेश सुखकर्ता आणि दुखहर्ता आहे. विघ्नांची वार्ता नाहीशी करतो. सर्वांगसुंदर, शेंदुराने चर्चित, मुक्तामाळ घातलेले गणराया!"},
+{"title":"वाचाल तर वाचाल","kavi":"बालगीत","emoji":"📚","lines":"वाचा, वाचा, वाचत राहा. ज्ञान घ्या मनात।\nपुस्तक हे मित्र आपले। राहते सोबत सदात।।\nवाचल्याने ज्ञान वाढे। बुद्धी होते तीक्ष्ण।\nवाचल्याने माणूस घडे। विचार होतो दृढ।।\nपुस्तक वाचा रोज थोडे। आयुष्य होईल मोठे।\nवाचाल तर वाचाल खरे। हे तुम्हांला सांगते।।","a":"वाचत राहा, ज्ञान मिळवा. पुस्तक हे आपले मित्र आहे. वाचल्याने बुद्धी तीक्ष्ण होते, माणूस घडतो."},
+{"title":"मी मराठी","kavi":"बालगीत","emoji":"🏮","lines":"मी मराठी अभिमाने सांगतो. मराठी असणे गर्वाचे।\nमाझी भाषा, माझी संस्कृती। मला सर्वात प्यारे।।\nसंतांची भाषा, शूरांची भाषा। अमृताची भाषा मराठी।\nज्ञानदेव तुकाराम रामदास। यांची भाषा मराठी।।\nमराठी बोलू, मराठी लिहू। मराठी शिकू सदा।\nमाझ्या मराठीचा अभिमान। राखेन मी सदा।।","a":"मी मराठी असल्याचा अभिमान आहे. संत, शूर यांची भाषा मराठी. मराठी बोलू, लिहू, शिकू — मराठीचा अभिमान राखेन."},
+{"title":"महाराष्ट्र गीत","kavi":"बालगीत","emoji":"🌄","lines":"जय जय महाराष्ट्र। भूमी संतांची।\nशूर मावळ्यांची. भूमी थोरांची।।\nसह्याद्री डोंगर। कोकण सागर।\nविदर्भ मराठवाडा। एक महाराष्ट्र सुंदर।।\nपुणे मुंबई नागपूर। नाशिक कोल्हापूर।\nसर्व महाराष्ट्र एक। जय जय महाराष्ट्र।।","a":"महाराष्ट्र संतांची, शूरांची, थोरांची भूमी आहे. सह्याद्री, कोकण, विदर्भ, मराठवाडा — सारा महाराष्ट्र एक आहे."},
+{"title":"होळी","kavi":"बालगीत","emoji":"🎨","lines":"होळी आली रंगांची. रंग उडती हर्षाने।\nलाल पिवळा निळा हिरवा. रंगले सारे।।\nहोळीत एकत्र येऊ। रंग एकमेकांना लावू।\nद्वेष विसरू, प्रेम जोडू। होळी साजरी करू।।\nपुरणपोळी गुजिया खाऊ। मिठाई वाटू सर्वांना।\nहोळीचा आनंद घेऊ। शुभेच्छा देऊ सर्वांना।।","a":"होळी रंगांची सण आहे. सर्वजण एकत्र येऊन रंग खेळतात, द्वेष विसरतात, प्रेम जोडतात."},
+{"title":"श्रमाचे फळ","kavi":"बालगीत","emoji":"💪","lines":"कष्टाचे फळ गोड असते. आळसाने नाही मिळत।\nघाम गाळला की सुख येते। हे जगाचे सत्य असते।।\nमुंगी कष्टाने धान्य गोळा करते। थंडीत राहते सुखाने।\nआळशी झोपतो उन्हात. नंतर पस्तावतो मनाने।।\nशीक रे बाळा मुंगीकडून। कष्ट करणे शिक।\nश्रमाचे फळ नक्की मिळते। हे ध्यानात नीट ठेव।।","a":"कष्टाचे फळ गोड असते, आळसाने काही मिळत नाही. मुंगीकडून कष्टाचा धडा शिकावा."},
+{"title":"माझे स्वप्न","kavi":"बालगीत","emoji":"⭐","lines":"माझ्या मनी स्वप्न आहे. मोठे व्हायचे आहे।\nदेशाला उपयोगी व्हायचे. हे मला करायचे आहे।।\nडॉक्टर, इंजिनियर, शिक्षक। काय व्हायचे मला।\nखूप शिकायचे, खूप करायचे। देश घडवायचा मला।।\nस्वप्न पाहणे सुरू ठेव। झटणे कधी सोडू नको।\nस्वप्न पूर्ण होईल एक दिवस। हे मनात ठेव नेहमी।।","a":"माझ्या मनात मोठे होण्याचे स्वप्न आहे. देशाला उपयोगी व्हायचे आहे. स्वप्न पाहा आणि झटत राहा."}
+];
+
+// ═══ PARAGRAPHS ═══
+const PARAGRAPHS=[
+{t:"माझी शाळा",lv:1,e:"🏫",text:"माझी शाळा खूप सुंदर आहे. शाळेत मोठी बाग आहे. बागेत रंगीबेरंगी फुले फुललेली असतात. शाळेत मोठे मैदान आहे. आम्ही तेथे खेळतो. माझ्या शाळेत खूप चांगले शिक्षक आहेत. ते आम्हाला प्रेमाने शिकवतात. मला माझी शाळा खूप आवडते.",eng:"My school is very beautiful. There is a big garden with colorful flowers. There is a playground. Our teachers teach lovingly. I love my school very much."},
+{t:"माझे कुटुंब",lv:1,e:"👨‍👩‍👧‍👦",text:"माझे कुटुंब छोटे आहे. आमच्या घरात आई, बाबा, आजी, आजोबा, भाऊ आणि मी राहतो. आई स्वयंपाक करते. बाबा शेतावर जातात. आजी मला गोष्टी सांगतात. आजोबा वर्तमानपत्र वाचतात. भाऊ आणि मी एकत्र खेळतो. आमचे कुटुंब सुखी आहे.",eng:"My family is small. Mother cooks, father goes to the farm. Grandmother tells stories, grandfather reads. Brother and I play together. Our family is happy."},
+{t:"पाऊस",lv:1,e:"🌧️",text:"पाऊस हे निसर्गाचे देणे आहे. पावसाळ्यात आकाशात काळे ढग येतात. विजांचा कडकडाट होतो. मग मोठ्या धारांनी पाऊस पडतो. शेतकरी पावसाची आतुरतेने वाट पाहतात. नदी, नाले, तलाव पाण्याने भरतात. झाडे हिरवीगार होतात. पावसाळ्यात निसर्ग खूप सुंदर दिसतो.",eng:"Rain is a gift of nature. Black clouds come, thunder roars, rain falls. Farmers eagerly wait. Rivers fill. Trees turn lush green. Nature looks beautiful in monsoon."},
+{t:"दिवाळी",lv:1,e:"🪔",text:"दिवाळी माझा आवडता सण आहे. दिवाळी कार्तिक महिन्यात येते. घरोघरी दिवे लावतात. लहान मुले फटाके उडवतात. आई फराळ बनवते — लाडू, चकली, करंजी. नवीन कपडे घालतात. सर्वांना शुभेच्छा देतात. दिवाळी हा आनंदाचा सण आहे.",eng:"Diwali is my favorite festival. Lamps are lit, firecrackers burst. Mother makes sweets. New clothes are worn. Diwali is a festival of joy."},
+{t:"शेतकरी",lv:1,e:"👨‍🌾",text:"शेतकरी हा देशाचा अन्नदाता आहे. तो कठोर मेहनत करतो. पहाटे उठून शेतावर जातो. नांगर चालवतो, बी पेरतो. पाऊस आला की आनंद होतो. पीक तयार झाल्यावर कापणी करतो. त्याच्या घामाने आपले ताट भरते. शेतकऱ्याचे जीवन कष्टाचे असते.",eng:"The farmer is food provider of the country. He works hard from dawn. He plows, sows seeds. His sweat fills our plates. The farmer's life is full of hard work."},
+{t:"माझे गाव",lv:1,e:"🏘️",text:"माझे गाव सह्याद्रीच्या कुशीत वसलेले आहे. गावाभोवती हिरवेगार शेते आहेत. गावात एक छोटी नदी वाहते. गावात मंदिर, शाळा आणि ग्रामपंचायत आहे. गावातील लोक शेती करतात. सणावाराला एकत्र येतात. माझ्या गावची हवा शुद्ध आहे. मला माझे गाव खूप प्रिय आहे.",eng:"My village is nestled in Sahyadri. Green fields surround it. A small river flows. People come together for festivals. I love my village very much."},
+{t:"आई - जगातील सर्वात थोर",lv:1,e:"👩",text:"आई ही जगातील सर्वात थोर व्यक्ती आहे. आई आपल्यासाठी अथक कष्ट करते. आपण आजारी असताना ती रात्रभर जागते. आपल्या सुखासाठी ती स्वतःचे सुख विसरते. आईचे प्रेम अतुलनीय आहे. आई हीच आपली पहिली शिक्षिका असते. आईच्या आशीर्वादाने आयुष्य सुखी होते.",eng:"Mother is the greatest person in the world. She toils tirelessly, stays awake when we're sick. Her love is incomparable. She is our first teacher. Her blessings make life happy."},
+{t:"महाराष्ट्र",lv:2,e:"🗺️",text:"महाराष्ट्र हे भारताच्या पश्चिम किनाऱ्यावर वसलेले राज्य आहे. मुंबई ही महाराष्ट्राची राजधानी आहे. पुणे हे सांस्कृतिक आणि शैक्षणिक केंद्र आहे. सह्याद्री, अजिंठा-वेरूळच्या लेण्या महाराष्ट्राचा अभिमान आहे. गोदावरी, कृष्णा नद्या महाराष्ट्रातून वाहतात. मराठी ही राजभाषा आहे. महाराष्ट्र संतांची भूमी आहे.",eng:"Maharashtra is on west coast of India. Mumbai is capital, Pune is cultural centre. Sahyadri, Ajanta-Ellora caves are its pride. Marathi is official language. It is land of great saints."},
+{t:"छत्रपती शिवाजी महाराज",lv:2,e:"⚔️",text:"छत्रपती शिवाजी महाराज हे मराठ्यांचे महान राजे होते. त्यांचा जन्म १९ फेब्रुवारी १६३० रोजी शिवनेरी किल्ल्यावर झाला. आईचे नाव जिजाबाई. त्यांनी लहान वयातच स्वराज्याचे स्वप्न पाहिले. रायगड, राजगड, तोरणा असे अनेक किल्ले जिंकले. आरमाराची स्थापना केली. ते एक आदर्श राजे होते.",eng:"Shivaji Maharaj was the great king of Marathas. Born on 19 February 1630 at Shivneri fort. His mother was Jijabai. He captured many forts, established a navy. He was an ideal king."},
+{t:"गणपती उत्सव",lv:2,e:"🙏",text:"गणपती उत्सव महाराष्ट्रातील सर्वात मोठा सण आहे. भाद्रपद शुद्ध चतुर्थीला गणपती येतो. घरोघरी मातीच्या गणपतीची मूर्ती आणतात. मोदकाचा नैवेद्य दाखवतात. आरती करतात. दहा दिवस उत्सव चालतो. अनंत चतुर्दशीला गणपतीचे विसर्जन होते. सगळे मिळून 'गणपती बाप्पा मोरया!' असा जयघोष करतात.",eng:"Ganesh festival is Maharashtra's biggest festival. Lasts ten days. Clay idols are brought home. Modak is offered. On Anant Chaturdashi, immersion takes place. Everyone shouts 'Ganpati Bappa Morya!'"},
+{t:"पर्यावरण संरक्षण",lv:2,e:"🌍",text:"पर्यावरण म्हणजे आपल्या सभोवतालचा निसर्ग. वाहनांमुळे वायू प्रदूषण होते. जंगलतोडीमुळे जमीन उजाड होते. पर्यावरण संरक्षणासाठी झाडे लावावीत. प्लास्टिक वापर कमी करावा. पाण्याची बचत करावी. आपण सर्वांनी मिळून पृथ्वी वाचवली पाहिजे.",eng:"Environment is nature around us. Air pollution, deforestation are threats. Plant trees, reduce plastic. Save water. We must all save the earth together."},
+{t:"संत तुकाराम",lv:2,e:"🙏",text:"संत तुकाराम हे महाराष्ट्रातील थोर वारकरी संत होते. त्यांचा जन्म देहू गावी इ.स. १५९८ मध्ये झाला. ते विठ्ठलाचे परम भक्त होते. त्यांनी अनेक अभंग लिहिले — सरळ, साध्या भाषेत. त्यांनी समाजातील अन्यायावर टीका केली. त्यांचे अभंग आजही लोकप्रिय आहेत.",eng:"Sant Tukaram was a great Warkari saint from Maharashtra. Born in Dehu in 1598. Wrote thousands of abhangas. Criticized social injustice. His abhangas are still popular today."},
+{t:"महाराष्ट्रातील किल्ले",lv:2,e:"🏰",text:"महाराष्ट्रात अनेक ऐतिहासिक किल्ले आहेत. रायगड, राजगड, तोरणा, सिंहगड, पन्हाळा, विजयदुर्ग हे प्रमुख किल्ले आहेत. छत्रपती शिवाजी महाराजांनी या किल्ल्यांचा वापर स्वराज्यासाठी केला. सह्याद्रीच्या डोंगरांवर हे किल्ले वसलेले आहेत. किल्ल्यांचे संरक्षण करणे आपले कर्तव्य आहे.",eng:"Maharashtra has many historical forts. Raigad, Rajgad, Sinhagad, Panhala are major ones. Shivaji Maharaj used them for Swarajya. Protecting them is our duty."},
+{t:"मराठी भाषेचे महत्त्व",lv:3,e:"🏮",text:"मराठी ही महाराष्ट्राची मातृभाषा आहे. तिला एक हजार वर्षांहून अधिक इतिहास आहे. ज्ञानेश्वर, नामदेव, एकनाथ, तुकाराम या संतांनी मराठी साहित्याला अमर केले. पु.ल. देशपांडे, कुसुमाग्रज यांसारख्या साहित्यिकांनी मराठीला जागतिक पातळीवर नेले. मराठी भाषेला आता अभिजात भाषेचा दर्जा मिळाला आहे.",eng:"Marathi is mother tongue of Maharashtra with over 1000 year history. Saints like Dnyaneshwar immortalized it. Writers like P.L. Deshpande took it to world stage. Marathi now has classical language status."},
+{t:"विज्ञान आणि तंत्रज्ञान",lv:3,e:"🔬",text:"विसाव्या-एकविसाव्या शतकात विज्ञान आणि तंत्रज्ञानाने अभूतपूर्व प्रगती केली. संगणक, इंटरनेट, कृत्रिम बुद्धिमत्ता यांनी जीवन बदलले. वैद्यकीय क्षेत्रात असाध्य रोगांवर उपचार शक्य झाले. भारताने मंगळयान आणि चांद्रयान यशस्वीरित्या पाठवले. विज्ञानाचा वापर मानवतेच्या भल्यासाठी केला पाहिजे.",eng:"Science and technology made unprecedented progress. Computers, AI changed life. India sent Mangalyaan and Chandrayaan. Science should be used for humanity's betterment."},
+{t:"भारतीय स्वातंत्र्य लढा",lv:3,e:"🇮🇳",text:"भारताने १५ ऑगस्ट १९४७ रोजी स्वातंत्र्य मिळवले. महात्मा गांधींनी अहिंसेच्या मार्गाने लढा दिला. सुभाषचंद्र बोस यांनी सशस्त्र क्रांतीचा मार्ग निवडला. भगतसिंग, चंद्रशेखर आझाद यांनी प्राण दिले. लोकमान्य टिळकांनी सामाजिक जागृती केली. स्वातंत्र्याचे फळ जपणे हे आपले कर्तव्य आहे.",eng:"India achieved independence on August 15, 1947. Gandhi fought through non-violence. Bose chose armed revolution. Bhagat Singh gave his life. It is our duty to preserve this independence."},
+{t:"मराठी संत परंपरा",lv:3,e:"🙏",text:"महाराष्ट्राची संत परंपरा अत्यंत समृद्ध आहे. संत ज्ञानेश्वर, नामदेव, एकनाथ, तुकाराम यांनी वारकरी संप्रदायाची स्थापना केली. ज्ञानेश्वरांनी ज्ञानेश्वरी लिहिली. तुकारामांनी हजारो अभंग लिहिले. या संतांनी जात-पात न मानता सर्वांना एकत्र आणले. पंढरपूरची वारी ही वारकरी परंपरेचे प्रतीक आहे.",eng:"Maharashtra's saint tradition is very rich. Saints Dnyaneshwar, Tukaram established Warkari sect. They brought everyone together without caste discrimination. Pilgrimage to Pandharpur is its symbol."},
+{t:"डॉ. बाबासाहेब आंबेडकर",lv:3,e:"📜",text:"डॉ. भीमराव रामजी आंबेडकर हे भारतीय संविधानाचे शिल्पकार होते. त्यांचा जन्म १४ एप्रिल १८९१ रोजी झाला. ते अत्यंत गरिबीत जन्मले, पण जिद्दीने शिकले. अमेरिका आणि ब्रिटनमधून उच्च शिक्षण घेतले. अस्पृश्यता नष्ट करण्यासाठी आयुष्यभर लढा दिला. 'शिका, संघटित व्हा, संघर्ष करा' हे त्यांचे ध्येयवाक्य होते.",eng:"Dr. Ambedkar was architect of Indian Constitution. Born April 14, 1891. Studied in USA and Britain. Fought throughout life against untouchability. 'Educate, Unite, Agitate' was his motto."},
+{t:"वाचन - जीवन समृद्धी",lv:3,e:"📚",text:"वाचन हे एक अत्यंत महत्त्वाचे कौशल्य आहे. वाचनाने ज्ञान, कल्पनाशक्ती आणि भाषाप्रभुत्व वाढते. चांगली पुस्तके माणसाचे जीवन बदलू शकतात. वर्तमानपत्र, मासिके, कादंबऱ्या वाचल्याने मन प्रसन्न होते. डिजिटल युगातही पुस्तकांचे महत्त्व कमी झालेले नाही. वाचाल तर वाचाल!",eng:"Reading is a very important skill. It increases knowledge, imagination and language mastery. Good books can change a person's life. Even in digital age, books remain important. Read and you shall survive!"},
+];
+
+// ═══ QUIZ ═══
+var QUIZ=[
+// ══ स्तर 1: अगदी सोपे (अक्षरे, शब्द, अंक) ══
+{q:"मराठी वर्णमालेत 'अ' नंतर कोणते अक्षर?",opts:["इ","आ","उ","ए"],ans:1,lv:1},
+{q:"'क' + 'ा' = ?",opts:["कि","का","कु","के"],ans:1,lv:1},
+{q:"'प' + 'ि' = ?",opts:["पा","पे","पि","पु"],ans:2,lv:1},
+{q:"'म' + 'ू' = ?",opts:["मा","मू","मि","मे"],ans:1,lv:1},
+{q:"'न' + 'ो' = ?",opts:["नो","ना","नि","ने"],ans:0,lv:1},
+{q:"'स' + 'ु' = ?",opts:["सा","से","सु","सो"],ans:2,lv:1},
+{q:"'ग' + 'े' = ?",opts:["गे","गा","गि","गो"],ans:0,lv:1},
+{q:"'त' + 'ी' = ?",opts:["ता","ती","ते","तु"],ans:1,lv:1},
+{q:"'ब' + 'ौ' = ?",opts:["बा","बे","बी","बौ"],ans:3,lv:1},
+{q:"'ल' + 'ं' = ?",opts:["लं","ला","लि","लु"],ans:0,lv:1},
+{q:"'एक' = किती?",opts:["2","1","3","0"],ans:1,lv:1},
+{q:"'पाच' = किती?",opts:["4","6","5","3"],ans:2,lv:1},
+{q:"'दहा' = किती?",opts:["8","9","11","10"],ans:3,lv:1},
+{q:"'वीस' = किती?",opts:["10","15","20","25"],ans:2,lv:1},
+{q:"'पन्नास' = किती?",opts:["40","60","50","70"],ans:2,lv:1},
+{q:"'कुत्रा' म्हणजे काय?",opts:["मांजर","कुत्रा","ससा","वाघ"],ans:1,lv:1},
+{q:"'आंबा' कोणते फळ?",opts:["भाजी","फूल","फळ","धान्य"],ans:2,lv:1},
+{q:"'गाय' कोणता प्राणी?",opts:["पक्षी","मासा","प्राणी","कीटक"],ans:2,lv:1},
+{q:"'शाळा' म्हणजे?",opts:["घर","मंदिर","शाळा","बाजार"],ans:2,lv:1},
+{q:"'पाणी' म्हणजे?",opts:["आग","वारा","पाणी","माती"],ans:2,lv:1},
+{q:"'आई' म्हणजे काय?",opts:["बहीण","बाबा","आई","आजी"],ans:2,lv:1},
+{q:"'भाऊ' म्हणजे काय?",opts:["बहीण","भाऊ","आई","बाबा"],ans:1,lv:1},
+{q:"सूर्य कोणत्या दिशेला उगवतो?",opts:["पश्चिम","उत्तर","दक्षिण","पूर्व"],ans:3,lv:1},
+{q:"आठवड्यात किती दिवस असतात?",opts:["5","6","7","8"],ans:2,lv:1},
+{q:"वर्षात किती महिने असतात?",opts:["10","11","12","13"],ans:2,lv:1},
+{q:"'लाल' रंग इंग्रजीत?",opts:["Blue","Green","Red","Yellow"],ans:2,lv:1},
+{q:"'हिरवा' रंग इंग्रजीत?",opts:["Red","Green","Blue","Black"],ans:1,lv:1},
+{q:"'निळा' रंग इंग्रजीत?",opts:["Blue","Red","Green","White"],ans:0,lv:1},
+{q:"'कांदा' कोणती भाजी?",opts:["फळ","भाजी","धान्य","मसाला"],ans:1,lv:1},
+{q:"'गाजर' कोणत्या रंगाचे?",opts:["लाल","हिरवा","नारंगी","पिवळा"],ans:2,lv:1},
+{q:"'टरबूज' कापल्यावर आत कोणता रंग?",opts:["पिवळा","पांढरा","लाल","नारंगी"],ans:2,lv:1},
+{q:"'हत्ती' कोणता प्राणी आहे?",opts:["लहान","उडणारा","मोठा","पाण्यातील"],ans:2,lv:1},
+{q:"'मासा' कुठे राहतो?",opts:["जंगलात","पाण्यात","आकाशात","झाडावर"],ans:1,lv:1},
+{q:"'पक्षी' कसा चालतो?",opts:["पोहतो","रांगतो","उडतो","धावतो"],ans:2,lv:1},
+// ══ स्तर 2: मध्यम (शब्दज्ञान, व्याकरण, सामान्य ज्ञान) ══
+{q:"'क' ते 'ञ' हे कोणते व्यंजन गट?",opts:["क-वर्ग","च-वर्ग","ट-वर्ग","त-वर्ग"],ans:0,lv:2},
+{q:"'त' + 'ा' + 'त' + 'ा' = ?",opts:["दादा","नाना","ताता","काका"],ans:2,lv:2},
+{q:"'म' + 'ा' + 'म' + 'ा' = ?",opts:["काका","मामा","बाबा","दादा"],ans:1,lv:2},
+{q:"'ब' + 'ा' + 'ब' + 'ा' = ?",opts:["काका","मामा","बाबा","दादा"],ans:2,lv:2},
+{q:"'साठ' = किती?",opts:["50","60","70","80"],ans:1,lv:2},
+{q:"'नव्वद' = किती?",opts:["80","85","90","95"],ans:2,lv:2},
+{q:"'एकशे' = किती?",opts:["10","50","100","1000"],ans:2,lv:2},
+{q:"'आनंद' विरुद्ध शब्द?",opts:["राग","दुःख","भीती","थकवा"],ans:1,lv:2},
+{q:"'दिवस' विरुद्ध शब्द?",opts:["संध्याकाळ","पहाट","रात्र","दुपार"],ans:2,lv:2},
+{q:"'उंच' विरुद्ध शब्द?",opts:["मोठा","लांब","ठेंगणा","रुंद"],ans:2,lv:2},
+{q:"'गरम' विरुद्ध शब्द?",opts:["उष्ण","थंड","कोमट","ताजा"],ans:1,lv:2},
+{q:"'शेतकरी' काय काम करतो?",opts:["शिकवणे","शेती","रुग्णसेवा","शिवण"],ans:1,lv:2},
+{q:"'डॉक्टर' काय काम करतो?",opts:["शिकवणे","रुग्ण बरे करणे","शिवण","बांधकाम"],ans:1,lv:2},
+{q:"'शिक्षक' काय काम करतो?",opts:["शिकवणे","रुग्ण बरे करणे","शेती","न्याय"],ans:0,lv:2},
+{q:"महाराष्ट्राची राजधानी?",opts:["पुणे","नागपूर","मुंबई","नाशिक"],ans:2,lv:2},
+{q:"भारताची राजधानी?",opts:["मुंबई","कोलकाता","दिल्ली","चेन्नई"],ans:2,lv:2},
+{q:"महाराष्ट्राची राज्यभाषा?",opts:["हिंदी","इंग्रजी","मराठी","गुजराती"],ans:2,lv:2},
+{q:"'पुस्तक' म्हणजे काय?",opts:["खेळणे","वाचणे","Book","खाणे"],ans:2,lv:2},
+{q:"'टोमॅटो' कोणत्या रंगाचा?",opts:["हिरवा","पांढरा","लाल","पिवळा"],ans:2,lv:2},
+{q:"'वांगे' कोणत्या रंगाचे?",opts:["लाल","जांभळा","हिरवा","पांढरा"],ans:1,lv:2},
+{q:"मराठी वर्णमालेत किती स्वर आहेत?",opts:["12","13","14","16"],ans:2,lv:2},
+{q:"मराठी वर्णमालेत किती व्यंजने आहेत?",opts:["34","35","36","40"],ans:2,lv:2},
+{q:"'बाराखडी' म्हणजे काय?",opts:["12 फळे","अक्षर+मात्रा","12 महिने","12 व्यंजने"],ans:1,lv:2},
+{q:"'वाघ' कुठे राहतो?",opts:["घरात","समुद्रात","जंगलात","आकाशात"],ans:2,lv:2},
+{q:"'मोर' कोणत्या देशाचा राष्ट्रीय पक्षी?",opts:["पाकिस्तान","श्रीलंका","भारत","नेपाळ"],ans:2,lv:2},
+{q:"'गाय' कोणती उपयुक्त गोष्ट देते?",opts:["लोकर","दूध","अंडे","मध"],ans:1,lv:2},
+{q:"'मधमाशी' काय देते?",opts:["दूध","मध","लोकर","रेशीम"],ans:1,lv:2},
+{q:"'नारळ' कोणत्या भागात मिळतो?",opts:["थंड प्रदेश","कोकण","वाळवंट","डोंगर"],ans:1,lv:2},
+{q:"'पाऊस' कोणत्या महिन्यात जास्त पडतो?",opts:["जानेवारी","मार्च","जून-जुलै","नोव्हेंबर"],ans:2,lv:2},
+{q:"सर्वात मोठा ग्रह कोणता?",opts:["पृथ्वी","मंगळ","गुरू","शनी"],ans:2,lv:2},
+{q:"एक किलोमध्ये किती ग्राम असतात?",opts:["100","500","1000","10000"],ans:2,lv:2},
+{q:"त्रिकोणाला किती बाजू असतात?",opts:["2","3","4","5"],ans:1,lv:2},
+{q:"चतुर्भुजाला किती बाजू असतात?",opts:["3","4","5","6"],ans:1,lv:2},
+// ══ स्तर 3: कठीण (साहित्य, म्हणी, वाक्प्रचार, इतिहास) ══
+{q:"'थेंबे थेंबे तळे साचे' अर्थ?",opts:["पाणी साठते","लहान प्रयत्नांनी मोठे काम होते","थेंब पडतो","तळ्यात पोहणे"],ans:1,lv:3},
+{q:"'अति तेथे माती' अर्थ?",opts:["खूप माती असते","अति केल्याने नुकसान","माती खूप असते","जमिनीत माती"],ans:1,lv:3},
+{q:"'घरोघरी मातीच्या चुली' अर्थ?",opts:["सर्वत्र समान परिस्थिती","चूल सगळीकडे असते","माती चांगली असते","घर बांधावे"],ans:0,lv:3},
+{q:"'नाचता येईना अंगण वाकडे' अर्थ?",opts:["नाचणे शिकावे","स्वतःची चूक न कबूल करणे","अंगण साफ करावे","नृत्य करावे"],ans:1,lv:3},
+{q:"'कान देणे' म्हणजे काय?",opts:["कान दुखणे","लक्षपूर्वक ऐकणे","कान देणे-घेणे","बहिरेपणा"],ans:1,lv:3},
+{q:"'डोळे उघडणे' म्हणजे?",opts:["झोपेतून उठणे","सत्य समजणे","डोळे धुणे","प्रकाश पाहणे"],ans:1,lv:3},
+{q:"'हात धुऊन बसणे' म्हणजे?",opts:["हात धुणे","जेवण करणे","काम सोडून देणे","स्वच्छता"],ans:2,lv:3},
+{q:"'तोंड लपवणे' म्हणजे?",opts:["चेहरा झाकणे","लाजणे/चोरी झाल्यावर दिसू नये","झोपणे","खाणे"],ans:1,lv:3},
+{q:"'रंग उधळणे' म्हणजे?",opts:["होळी खेळणे","पराक्रम/कला दाखवणे","रंग ओतणे","चित्र काढणे"],ans:1,lv:3},
+{q:"ज्ञानेश्वरी कोणी लिहिली?",opts:["तुकाराम","रामदास","ज्ञानेश्वर","नामदेव"],ans:2,lv:3},
+{q:"'श्रावणमासी' कविता कोणी लिहिली?",opts:["केशवसुत","बालकवी","सावरकर","तुकाराम"],ans:1,lv:3},
+{q:"'ने मजसी ने' कविता कोणी लिहिली?",opts:["केशवसुत","बालकवी","सावरकर","तुकाराम"],ans:2,lv:3},
+{q:"संत तुकाराम कोणत्या गावचे?",opts:["पंढरपूर","देहू","आळंदी","नाशिक"],ans:1,lv:3},
+{q:"संत ज्ञानेश्वर कोणत्या गावचे?",opts:["देहू","पंढरपूर","आळंदी","नाशिक"],ans:2,lv:3},
+{q:"समर्थ रामदास यांचे मूळ नाव काय?",opts:["नारायण","रामदास","नरहर","विठ्ठल"],ans:0,lv:3},
+{q:"शिवाजी महाराजांचा जन्म कुठे झाला?",opts:["रायगड","सिंहगड","शिवनेरी","प्रतापगड"],ans:2,lv:3},
+{q:"शिवाजी महाराजांचे गुरू कोण?",opts:["तुकाराम","ज्ञानेश्वर","समर्थ रामदास","एकनाथ"],ans:2,lv:3},
+{q:"'पसायदान' कोणी रचले?",opts:["तुकाराम","रामदास","ज्ञानेश्वर","नामदेव"],ans:2,lv:3},
+{q:"भारताचे राष्ट्रीय फूल कोणते?",opts:["गुलाब","कमळ","झेंडू","मोगरा"],ans:1,lv:3},
+{q:"भारताचे राष्ट्रीय फळ कोणते?",opts:["केळे","संत्रे","आंबा","द्राक्षे"],ans:2,lv:3},
+{q:"भारताचे राष्ट्रीय प्राणी कोणते?",opts:["हत्ती","सिंह","वाघ","मोर"],ans:2,lv:3},
+{q:"महाराष्ट्राचे राज्य प्राणी कोणते?",opts:["वाघ","शेकरू","हत्ती","गेंडा"],ans:1,lv:3},
+{q:"गोदावरी नदी कुठून उगम पावते?",opts:["महाबळेश्वर","त्र्यंबकेश्वर","भीमाशंकर","माथेरान"],ans:1,lv:3},
+{q:"कृष्णा नदी कुठून उगम पावते?",opts:["महाबळेश्वर","त्र्यंबकेश्वर","भीमाशंकर","माथेरान"],ans:0,lv:3},
+{q:"महाराष्ट्रात किती जिल्हे आहेत?",opts:["32","34","36","40"],ans:2,lv:3},
+{q:"'बालकवी' यांचे खरे नाव काय?",opts:["विष्णू वामन","त्र्यंबक बापूजी","केशव कृष्ण","नारायण वासुदेव"],ans:1,lv:3},
+{q:"विज्ञान दिन केव्हा साजरा होतो?",opts:["15 ऑगस्ट","28 फेब्रुवारी","26 जानेवारी","1 मे"],ans:1,lv:3},
+{q:"'जागतिक मातृभाषा दिन' केव्हा?",opts:["21 फेब्रुवारी","14 फेब्रुवारी","1 मार्च","26 जानेवारी"],ans:0,lv:3},
+{q:"मराठी राजभाषा दिन केव्हा?",opts:["27 फेब्रुवारी","1 मे","15 ऑगस्ट","1 जानेवारी"],ans:0,lv:3},
+{q:"'केशवसुत' यांना मराठी कवितेचे काय म्हणतात?",opts:["जनक","राजा","पिता","गुरू"],ans:2,lv:3},
+,
+{q:"'चतुर' म्हणजे काय?",opts:["मूर्ख","हुशार","आळशी","दयाळू"],ans:1,lv:1},
+{q:"'पहाट' म्हणजे दिवसाची कोणती वेळ?",opts:["दुपार","संध्याकाळ","रात्र","सूर्योदयाची वेळ"],ans:3,lv:2},
+{q:"'विठ्ठल' कोणत्या देवाचे नाव?",opts:["शंकर","विष्णू","गणपती","राम"],ans:1,lv:3}];
+
+var numRanges={"१-२०":NUMBERS.slice(1,21),"२१-४०":NUMBERS.slice(21,41),"४१-६०":NUMBERS.slice(41,61),"६१-९९":NUMBERS.slice(61,100),"१०० पुढे":NUMBERS.slice(100)};
+
+
+// ═══ WORD SVG ILLUSTRATIONS (offline, precise pictures) ═══
+var WS={
+
+// ── भाज्या ──
+"कांदा":'<svg viewBox="0 0 60 60"><ellipse cx="30" cy="38" rx="22" ry="17" fill="#c084c8"/><ellipse cx="30" cy="35" rx="19" ry="14" fill="#a855a8" opacity="0.6"/><ellipse cx="30" cy="32" rx="15" ry="11" fill="#7c3d7e" opacity="0.5"/><path d="M26 24 Q28 12 30 8 Q32 12 34 24" fill="none" stroke="#4a7c3f" stroke-width="3" stroke-linecap="round"/></svg>',
+"बटाटा":'<svg viewBox="0 0 60 60"><ellipse cx="30" cy="33" rx="23" ry="18" fill="#c8a46e"/><ellipse cx="22" cy="27" rx="3" ry="2" fill="#7a5c2e"/><ellipse cx="37" cy="29" rx="2.5" ry="2" fill="#7a5c2e"/><ellipse cx="29" cy="40" rx="2" ry="2" fill="#7a5c2e"/><ellipse cx="18" cy="35" rx="2" ry="2" fill="#7a5c2e"/></svg>',
+"टोमॅटो":'<svg viewBox="0 0 60 60"><circle cx="30" cy="35" r="20" fill="#e53935"/><circle cx="30" cy="35" r="20" fill="none" stroke="#c62828" stroke-width="2"/><path d="M22 18 Q30 12 38 18" fill="none" stroke="#2e7d32" stroke-width="3"/><line x1="30" y1="12" x2="30" y2="18" stroke="#2e7d32" stroke-width="2.5"/><circle cx="30" cy="35" r="10" fill="#e57373" opacity="0.3"/></svg>',
+"गाजर":'<svg viewBox="0 0 60 60"><polygon points="30,8 38,42 30,50 22,42" fill="#FF6D00"/><polygon points="30,8 38,42 30,50 22,42" fill="#FF8F00" opacity="0.5"/><line x1="26" y1="20" x2="20" y2="15" stroke="#2e7d32" stroke-width="2"/><line x1="30" y1="16" x2="30" y2="8" stroke="#2e7d32" stroke-width="2"/><line x1="34" y1="20" x2="40" y2="15" stroke="#2e7d32" stroke-width="2"/><ellipse cx="30" cy="30" rx="4" ry="12" fill="#FFB300" opacity="0.3"/></svg>',
+"वांगे":'<svg viewBox="0 0 60 60"><ellipse cx="30" cy="36" rx="16" ry="22" fill="#7b1fa2"/><ellipse cx="30" cy="36" rx="12" ry="18" fill="#9c27b0" opacity="0.4"/><path d="M24 16 Q30 8 36 16" fill="#4a148c" stroke="#4a148c" stroke-width="1"/><line x1="30" y1="10" x2="28" y2="4" stroke="#2e7d32" stroke-width="2.5"/></svg>',
+"कोबी":'<svg viewBox="0 0 60 60"><circle cx="30" cy="32" r="20" fill="#a5d6a7"/><circle cx="30" cy="32" r="16" fill="#66bb6a"/><circle cx="30" cy="32" r="12" fill="#43a047"/><circle cx="30" cy="32" r="8" fill="#2e7d32"/><path d="M15 20 Q30 12 45 20" fill="none" stroke="#81c784" stroke-width="3"/></svg>',
+"मिरची":'<svg viewBox="0 0 60 60"><path d="M30 10 Q38 16 40 28 Q42 40 35 50 Q30 54 25 50 Q18 40 20 28 Q22 16 30 10Z" fill="#e53935"/><path d="M28 10 Q30 4 32 10" fill="none" stroke="#2e7d32" stroke-width="3"/><line x1="30" y1="8" x2="30" y2="4" stroke="#2e7d32" stroke-width="2"/></svg>',
+"भेंडी":'<svg viewBox="0 0 60 60"><path d="M28 6 Q32 6 34 10 L38 40 Q38 52 30 54 Q22 52 22 40 L26 10 Z" fill="#558b2f"/><path d="M28 6 Q30 4 32 6" fill="#33691e"/><line x1="26" y1="20" x2="20" y2="18" stroke="#33691e" stroke-width="1.5"/><line x1="34" y1="25" x2="40" y2="22" stroke="#33691e" stroke-width="1.5"/><line x1="26" y1="32" x2="20" y2="30" stroke="#33691e" stroke-width="1.5"/></svg>',
+"मेथी":'<svg viewBox="0 0 60 60"><ellipse cx="20" cy="25" rx="7" ry="9" fill="#66bb6a"/><ellipse cx="30" cy="20" rx="7" ry="9" fill="#4caf50"/><ellipse cx="40" cy="25" rx="7" ry="9" fill="#66bb6a"/><ellipse cx="25" cy="38" rx="7" ry="9" fill="#81c784"/><ellipse cx="36" cy="38" rx="7" ry="9" fill="#4caf50"/></svg>',
+"पालक":'<svg viewBox="0 0 60 60"><path d="M20 50 Q10 30 20 15 Q30 8 40 15 Q50 30 40 50 Q30 54 20 50Z" fill="#2e7d32"/><path d="M30 15 L30 50" stroke="#1b5e20" stroke-width="2"/><path d="M20 25 Q25 20 30 25 Q35 20 40 25" fill="none" stroke="#1b5e20" stroke-width="1.5"/><path d="M18 35 Q24 28 30 35 Q36 28 42 35" fill="none" stroke="#1b5e20" stroke-width="1.5"/></svg>',
+"मका":'<svg viewBox="0 0 60 60"><rect x="20" y="14" width="20" height="34" rx="5" fill="#FFD600"/><rect x="20" y="14" width="20" height="34" rx="5" fill="#FFF176" opacity="0.4"/><circle cx="25" cy="22" r="2.5" fill="#F9A825"/><circle cx="30" cy="22" r="2.5" fill="#F9A825"/><circle cx="35" cy="22" r="2.5" fill="#F9A825"/><circle cx="25" cy="29" r="2.5" fill="#F9A825"/><circle cx="30" cy="29" r="2.5" fill="#F9A825"/><circle cx="35" cy="29" r="2.5" fill="#F9A825"/><circle cx="25" cy="36" r="2.5" fill="#F9A825"/><circle cx="30" cy="36" r="2.5" fill="#F9A825"/><circle cx="35" cy="36" r="2.5" fill="#F9A825"/><path d="M22 14 Q18 8 14 6 M30 12 Q30 5 30 2 M38 14 Q42 8 46 6" fill="none" stroke="#4caf50" stroke-width="2"/></svg>',
+"काकडी":'<svg viewBox="0 0 60 60"><ellipse cx="30" cy="30" rx="13" ry="22" fill="#4caf50"/><ellipse cx="30" cy="30" rx="10" ry="18" fill="#81c784" opacity="0.5"/><line x1="23" y1="20" x2="37" y2="20" stroke="#2e7d32" stroke-width="1.5" stroke-dasharray="2,3"/><line x1="23" y1="27" x2="37" y2="27" stroke="#2e7d32" stroke-width="1.5" stroke-dasharray="2,3"/><line x1="23" y1="34" x2="37" y2="34" stroke="#2e7d32" stroke-width="1.5" stroke-dasharray="2,3"/><path d="M28 8 Q30 5 32 8" fill="#2e7d32"/></svg>',
+"फ्लॉवर":'<svg viewBox="0 0 60 60"><circle cx="30" cy="28" r="16" fill="#f5f5f5"/><circle cx="22" cy="22" r="7" fill="#eeeeee"/><circle cx="30" cy="18" r="7" fill="#eeeeee"/><circle cx="38" cy="22" r="7" fill="#eeeeee"/><circle cx="38" cy="32" r="7" fill="#eeeeee"/><circle cx="30" cy="36" r="7" fill="#eeeeee"/><circle cx="22" cy="32" r="7" fill="#eeeeee"/><circle cx="30" cy="28" r="10" fill="#e0e0e0"/><path d="M20 40 Q15 50 18 54 M30 42 L30 54 M40 40 Q45 50 42 54" fill="none" stroke="#4caf50" stroke-width="2"/></svg>',
+"लसूण":'<svg viewBox="0 0 60 60"><ellipse cx="30" cy="36" rx="18" ry="18" fill="#fff9c4"/><ellipse cx="22" cy="30" rx="8" ry="10" fill="#f5f5f5" stroke="#ddd" stroke-width="1"/><ellipse cx="30" cy="26" rx="8" ry="11" fill="#fafafa" stroke="#ddd" stroke-width="1"/><ellipse cx="38" cy="30" rx="8" ry="10" fill="#f5f5f5" stroke="#ddd" stroke-width="1"/><line x1="30" y1="14" x2="30" y2="8" stroke="#8d6e63" stroke-width="2"/></svg>',
+"आले":'<svg viewBox="0 0 60 60"><path d="M10 35 Q14 25 20 28 Q22 22 28 24 Q30 18 36 22 Q40 16 46 20 Q50 28 46 34 Q42 40 36 38 Q34 44 28 42 Q24 48 18 44 Q12 42 10 35Z" fill="#bcaaa4"/><circle cx="20" cy="30" r="3" fill="#8d6e63"/><circle cx="30" cy="26" r="3" fill="#8d6e63"/><circle cx="40" cy="28" r="3" fill="#8d6e63"/></svg>',
+"हळद":'<svg viewBox="0 0 60 60"><rect x="12" y="28" width="36" height="12" rx="6" fill="#FF8F00"/><rect x="20" y="22" width="14" height="10" rx="5" fill="#FFB300"/><rect x="28" y="16" width="12" height="10" rx="5" fill="#FFC107"/><circle cx="18" cy="34" r="4" fill="#FF6F00"/><circle cx="42" cy="34" r="4" fill="#FF6F00"/></svg>',
+"मुळा":'<svg viewBox="0 0 60 60"><ellipse cx="30" cy="28" rx="12" ry="20" fill="#fafafa"/><ellipse cx="30" cy="28" rx="10" ry="17" fill="#f5f5f5" opacity="0.6"/><line x1="30" y1="48" x2="30" y2="56" stroke="#e0e0e0" stroke-width="2"/><path d="M22 14 Q18 8 16 6 M28 12 Q28 6 28 3 M36 14 Q40 8 42 6" fill="none" stroke="#4caf50" stroke-width="2"/></svg>',
+"बीट":'<svg viewBox="0 0 60 60"><circle cx="30" cy="33" r="20" fill="#ad1457"/><circle cx="30" cy="33" r="14" fill="#c2185b" opacity="0.5"/><line x1="30" y1="13" x2="30" y2="6" stroke="#2e7d32" stroke-width="2.5"/><line x1="22" y1="16" x2="16" y2="10" stroke="#2e7d32" stroke-width="2"/><line x1="38" y1="16" x2="44" y2="10" stroke="#2e7d32" stroke-width="2"/></svg>',
+"शेवगा":'<svg viewBox="0 0 60 60"><rect x="26" y="6" width="8" height="48" rx="4" fill="#558b2f"/><ellipse cx="20" cy="22" rx="5" ry="3" fill="#33691e" transform="rotate(-30 20 22)"/><ellipse cx="40" cy="30" rx="5" ry="3" fill="#33691e" transform="rotate(30 40 30)"/><ellipse cx="18" cy="38" rx="5" ry="3" fill="#33691e" transform="rotate(-20 18 38)"/></svg>',
+"कोथिंबीर":'<svg viewBox="0 0 60 60"><circle cx="18" cy="20" r="6" fill="#66bb6a"/><circle cx="30" cy="16" r="6" fill="#4caf50"/><circle cx="42" cy="20" r="6" fill="#66bb6a"/><circle cx="24" cy="32" r="6" fill="#81c784"/><circle cx="36" cy="32" r="6" fill="#4caf50"/><circle cx="30" cy="44" r="5" fill="#66bb6a"/><line x1="24" y1="38" x2="20" y2="54" stroke="#2e7d32" stroke-width="2"/><line x1="30" y1="40" x2="30" y2="54" stroke="#2e7d32" stroke-width="2"/><line x1="36" y1="38" x2="40" y2="54" stroke="#2e7d32" stroke-width="2"/></svg>',
+"घेवडा":'<svg viewBox="0 0 60 60"><path d="M12 30 Q14 18 22 16 Q30 14 38 16 Q46 18 48 30 Q46 42 38 44 Q30 46 22 44 Q14 42 12 30Z" fill="#388e3c"/><ellipse cx="22" cy="30" r="5" fill="#2e7d32" opacity="0.5"/><ellipse cx="30" cy="30" r="5" fill="#2e7d32" opacity="0.5"/><ellipse cx="38" cy="30" r="5" fill="#2e7d32" opacity="0.5"/></svg>',
+"वाटाणे":'<svg viewBox="0 0 60 60"><path d="M8 28 Q8 16 16 14 L44 14 Q52 16 52 28 Q52 38 44 40 L16 40 Q8 38 8 28Z" fill="#558b2f"/><circle cx="20" cy="28" r="7" fill="#81c784"/><circle cx="30" cy="28" r="7" fill="#81c784"/><circle cx="40" cy="28" r="7" fill="#81c784"/></svg>',
+"तोंडली":'<svg viewBox="0 0 60 60"><ellipse cx="30" cy="30" rx="14" ry="20" fill="#4caf50"/><ellipse cx="30" cy="30" rx="10" ry="16" fill="#66bb6a" opacity="0.5"/><line x1="22" y1="20" x2="38" y2="20" stroke="#2e7d32" stroke-width="1.5" stroke-dasharray="2,3"/><line x1="20" y1="28" x2="40" y2="28" stroke="#2e7d32" stroke-width="1.5" stroke-dasharray="2,3"/><line x1="20" y1="36" x2="40" y2="36" stroke="#2e7d32" stroke-width="1.5" stroke-dasharray="2,3"/><circle cx="30" cy="12" r="3" fill="#2e7d32"/></svg>',
+"दुधी":'<svg viewBox="0 0 60 60"><ellipse cx="30" cy="36" rx="14" ry="20" fill="#a5d6a7"/><ellipse cx="30" cy="22" rx="8" ry="10" fill="#81c784"/><ellipse cx="30" cy="30" rx="10" ry="15" fill="#c8e6c9" opacity="0.4"/><line x1="28" y1="8" x2="26" y2="4" stroke="#2e7d32" stroke-width="2"/></svg>',
+"कारले":'<svg viewBox="0 0 60 60"><ellipse cx="30" cy="30" rx="12" ry="22" fill="#558b2f"/><ellipse cx="24" cy="22" rx="4" ry="6" fill="#388e3c"/><ellipse cx="36" cy="22" rx="4" ry="6" fill="#388e3c"/><ellipse cx="24" cy="34" rx="4" ry="6" fill="#388e3c"/><ellipse cx="36" cy="34" rx="4" ry="6" fill="#388e3c"/><ellipse cx="30" cy="42" rx="4" ry="6" fill="#388e3c"/><line x1="28" y1="8" x2="28" y2="4" stroke="#2e7d32" stroke-width="2"/></svg>',
+"परवर":'<svg viewBox="0 0 60 60"><ellipse cx="30" cy="30" rx="14" ry="22" fill="#81c784"/><ellipse cx="30" cy="24" rx="10" ry="8" fill="#a5d6a7" opacity="0.6"/><line x1="22" y1="18" x2="38" y2="18" stroke="#4caf50" stroke-width="1.5" stroke-dasharray="2,3"/><line x1="20" y1="26" x2="40" y2="26" stroke="#4caf50" stroke-width="1.5" stroke-dasharray="2,3"/><line x1="20" y1="34" x2="40" y2="34" stroke="#4caf50" stroke-width="1.5" stroke-dasharray="2,3"/><circle cx="30" cy="10" r="3" fill="#4caf50"/></svg>',
+"सुरण":'<svg viewBox="0 0 60 60"><path d="M15 20 Q12 30 14 40 Q16 50 30 52 Q44 50 46 40 Q48 30 45 20 Q40 12 30 10 Q20 12 15 20Z" fill="#795548"/><path d="M18 24 Q16 32 18 40" fill="none" stroke="#5d4037" stroke-width="2"/><path d="M36 22 Q40 30 38 40" fill="none" stroke="#5d4037" stroke-width="2"/><ellipse cx="30" cy="10" rx="5" ry="3" fill="#6d4c41"/></svg>',
+"रताळे":'<svg viewBox="0 0 60 60"><path d="M12 28 Q12 16 22 14 Q30 12 38 14 Q48 16 48 28 Q48 42 38 46 Q30 48 22 46 Q12 42 12 28Z" fill="#bf360c"/><path d="M20 18 Q16 14 14 10" fill="none" stroke="#33691e" stroke-width="2"/><path d="M30 16 Q30 10 30 6" fill="none" stroke="#33691e" stroke-width="2"/><path d="M40 18 Q44 14 46 10" fill="none" stroke="#33691e" stroke-width="2"/></svg>',
+"अळू":'<svg viewBox="0 0 60 60"><path d="M30 50 Q12 44 10 28 Q12 16 24 14 Q30 12 36 14 Q48 16 50 28 Q48 44 30 50Z" fill="#33691e"/><path d="M30 50 L30 14" stroke="#1b5e20" stroke-width="2.5"/><path d="M10 28 Q20 24 30 28 Q40 24 50 28" fill="none" stroke="#1b5e20" stroke-width="1.5"/></svg>',
+"शेपू":'<svg viewBox="0 0 60 60"><line x1="30" y1="8" x2="30" y2="52" stroke="#558b2f" stroke-width="3"/><path d="M30 16 Q22 12 16 16"/><path d="M30 22 Q38 18 44 22" fill="none" stroke="#81c784" stroke-width="2"/><path d="M30 30 Q22 26 16 30" fill="none" stroke="#81c784" stroke-width="2"/><path d="M30 38 Q38 34 44 38" fill="none" stroke="#81c784" stroke-width="2"/><circle cx="30" cy="8" r="3" fill="#2e7d32"/></svg>',
+"पुदिना":'<svg viewBox="0 0 60 60"><path d="M30 54 L30 20" stroke="#2e7d32" stroke-width="2.5"/><path d="M30 28 Q20 20 14 24 Q18 32 30 34" fill="#4caf50"/><path d="M30 38 Q40 30 46 34 Q42 42 30 44" fill="#66bb6a"/><path d="M30 22 Q20 14 14 18 Q18 26 30 28" fill="#81c784" opacity="0.7"/></svg>',
+"कढीपत्ता":'<svg viewBox="0 0 60 60"><path d="M16 40 Q8 26 20 16 Q30 10 40 16 Q44 22 40 30 Q36 40 26 44Z" fill="#33691e"/><path d="M24 42 Q22 50 22 54" stroke="#4caf50" stroke-width="2"/><path d="M20 18 Q22 28 20 38" fill="none" stroke="#1b5e20" stroke-width="2"/><path d="M36 20 Q34 28 36 36" fill="none" stroke="#1b5e20" stroke-width="2"/></svg>',
+"कोहळा":'<svg viewBox="0 0 60 60"><ellipse cx="30" cy="34" rx="22" ry="18" fill="#e0e0e0"/><ellipse cx="30" cy="34" rx="22" ry="18" fill="none" stroke="#9e9e9e" stroke-width="2" stroke-dasharray="4,4"/><ellipse cx="30" cy="34" rx="14" ry="12" fill="#eeeeee"/><line x1="30" y1="16" x2="30" y2="10" stroke="#5d4037" stroke-width="2.5"/></svg>',
+"भोपळा":'<svg viewBox="0 0 60 60"><ellipse cx="22" cy="32" rx="12" ry="18" fill="#e65100"/><ellipse cx="38" cy="32" rx="12" ry="18" fill="#ef6c00"/><ellipse cx="30" cy="30" rx="10" ry="18" fill="#f57c00"/><ellipse cx="26" cy="30" rx="8" ry="16" fill="#ff8f00" opacity="0.4"/><line x1="30" y1="12" x2="30" y2="6" stroke="#5d4037" stroke-width="2.5"/><path d="M28 6 Q22 2 20 6" fill="none" stroke="#2e7d32" stroke-width="2"/></svg>',
+"वालवड":'<svg viewBox="0 0 60 60"><ellipse cx="20" cy="32" rx="8" ry="10" fill="#8d6e63"/><ellipse cx="30" cy="28" rx="8" ry="10" fill="#795548"/><ellipse cx="40" cy="32" rx="8" ry="10" fill="#8d6e63"/><path d="M14 26 Q12 20 16 18 Q24 14 30 18 Q36 14 44 18 Q48 20 46 26" fill="none" stroke="#4caf50" stroke-width="2"/></svg>',
+"चवळी":'<svg viewBox="0 0 60 60"><path d="M10 32 Q12 20 20 18 L40 18 Q48 20 50 32 Q48 44 40 46 L20 46 Q12 44 10 32Z" fill="#4caf50"/><ellipse cx="20" cy="32" r="5" fill="#f5f5f5"/><ellipse cx="30" cy="32" r="5" fill="#f5f5f5"/><ellipse cx="40" cy="32" r="5" fill="#f5f5f5"/></svg>',
+"मटकी":'<svg viewBox="0 0 60 60"><ellipse cx="22" cy="30" rx="9" ry="10" fill="#ffd54f"/><ellipse cx="32" cy="26" rx="9" ry="10" fill="#ffca28"/><ellipse cx="40" cy="32" rx="8" ry="9" fill="#ffd54f"/><path d="M14 24 Q12 18 16 16 Q20 14 24 18" fill="none" stroke="#4caf50" stroke-width="2"/></svg>',
+"तूर":'<svg viewBox="0 0 60 60"><path d="M10 30 Q10 18 18 16 L42 16 Q50 18 50 30 Q50 42 42 44 L18 44 Q10 42 10 30Z" fill="#ffcc02"/><ellipse cx="22" cy="30" r="6" fill="#f9a825" opacity="0.7"/><ellipse cx="30" cy="30" r="6" fill="#f9a825" opacity="0.7"/><ellipse cx="38" cy="30" r="6" fill="#f9a825" opacity="0.7"/></svg>',
+"उडीद":'<svg viewBox="0 0 60 60"><ellipse cx="20" cy="30" rx="8" ry="9" fill="#212121"/><ellipse cx="30" cy="26" rx="8" ry="9" fill="#212121"/><ellipse cx="40" cy="30" rx="8" ry="9" fill="#212121"/><path d="M14 24 Q12 18 16 16 Q22 12 26 18" fill="none" stroke="#4caf50" stroke-width="2"/><ellipse cx="20" cy="30" rx="3" ry="2" fill="#424242" opacity="0.5"/></svg>',
+"मूग":'<svg viewBox="0 0 60 60"><path d="M8 28 Q10 18 18 16 L42 16 Q50 18 52 28 Q50 40 42 42 L18 42 Q10 40 8 28Z" fill="#558b2f"/><ellipse cx="20" cy="28" r="6" fill="#33691e" opacity="0.6"/><ellipse cx="30" cy="28" r="6" fill="#33691e" opacity="0.6"/><ellipse cx="40" cy="28" r="6" fill="#33691e" opacity="0.6"/><line x1="20" y1="22" x2="20" y2="34" stroke="#81c784" stroke-width="1"/><line x1="30" y1="22" x2="30" y2="34" stroke="#81c784" stroke-width="1"/><line x1="40" y1="22" x2="40" y2="34" stroke="#81c784" stroke-width="1"/></svg>',
+
+// ── फळे ──
+"आंबा":'<svg viewBox="0 0 60 60"><path d="M30 50 Q16 46 12 32 Q10 20 22 14 Q30 10 36 16 Q46 22 44 36 Q40 50 30 50Z" fill="#FFB300"/><path d="M24 18 Q20 28 22 38" fill="none" stroke="#FF8F00" stroke-width="2"/><line x1="30" y1="10" x2="32" y2="4" stroke="#5d4037" stroke-width="2.5"/><path d="M32 4 Q36 2 38 6" fill="none" stroke="#33691e" stroke-width="2"/></svg>',
+"केळे":'<svg viewBox="0 0 60 60"><path d="M14 20 Q12 30 16 42 Q20 52 30 52 Q40 50 44 40 Q46 28 42 20 Q38 14 30 12 Q20 12 14 20Z" fill="#FFD600"/><path d="M14 20 Q18 18 24 22 Q30 24 36 22 Q42 18 44 20" fill="#FFF176" stroke="#FBC02D" stroke-width="1.5"/><path d="M16 28 Q18 36 24 42" fill="none" stroke="#F9A825" stroke-width="1.5"/></svg>',
+"सफरचंद":'<svg viewBox="0 0 60 60"><path d="M30 50 Q14 48 12 32 Q10 18 22 14 Q28 12 30 16 Q32 12 38 14 Q50 18 48 32 Q46 48 30 50Z" fill="#e53935"/><path d="M22 18 Q18 28 20 38" fill="none" stroke="#c62828" stroke-width="1.5"/><line x1="30" y1="12" x2="30" y2="6" stroke="#5d4037" stroke-width="2.5"/><path d="M30 6 Q36 2 38 6" fill="none" stroke="#33691e" stroke-width="2"/></svg>',
+"द्राक्षे":'<svg viewBox="0 0 60 60"><circle cx="20" cy="26" r="8" fill="#7b1fa2"/><circle cx="32" cy="22" r="8" fill="#8e24aa"/><circle cx="40" cy="28" r="8" fill="#7b1fa2"/><circle cx="22" cy="36" r="8" fill="#9c27b0"/><circle cx="34" cy="36" r="8" fill="#8e24aa"/><circle cx="28" cy="46" r="8" fill="#7b1fa2"/><line x1="28" y1="14" x2="28" y2="8" stroke="#5d4037" stroke-width="2"/></svg>',
+"संत्रे":'<svg viewBox="0 0 60 60"><circle cx="30" cy="32" r="22" fill="#FF6D00"/><circle cx="30" cy="32" r="22" fill="none" stroke="#E64A19" stroke-width="2"/><line x1="30" y1="10" x2="30" y2="54" stroke="#E64A19" stroke-width="1.5"/><line x1="8" y1="32" x2="52" y2="32" stroke="#E64A19" stroke-width="1.5"/><line x1="14" y1="18" x2="46" y2="46" stroke="#E64A19" stroke-width="1.5" opacity="0.5"/><line x1="14" y1="46" x2="46" y2="18" stroke="#E64A19" stroke-width="1.5" opacity="0.5"/><line x1="30" y1="10" x2="32" y2="4" stroke="#33691e" stroke-width="2"/></svg>',
+"डाळिंब":'<svg viewBox="0 0 60 60"><path d="M30 50 Q14 48 12 34 Q12 20 24 16 Q30 14 36 16 Q48 20 48 34 Q46 48 30 50Z" fill="#c62828"/><path d="M24 18 Q22 28 24 38" fill="none" stroke="#b71c1c" stroke-width="1.5"/><circle cx="22" cy="26" r="3" fill="#ffcdd2"/><circle cx="30" cy="30" r="3" fill="#ffcdd2"/><circle cx="38" cy="26" r="3" fill="#ffcdd2"/><circle cx="26" cy="36" r="3" fill="#ffcdd2"/><circle cx="34" cy="36" r="3" fill="#ffcdd2"/><ellipse cx="30" cy="14" rx="6" ry="4" fill="#b71c1c"/></svg>',
+"नारळ":'<svg viewBox="0 0 60 60"><ellipse cx="30" cy="34" rx="22" ry="20" fill="#5d4037"/><ellipse cx="30" cy="34" rx="22" ry="20" fill="none" stroke="#4e342e" stroke-width="2"/><ellipse cx="30" cy="34" rx="16" ry="14" fill="#6d4c41"/><ellipse cx="30" cy="32" rx="10" ry="9" fill="#f5f5f5"/><circle cx="24" cy="28" r="3" fill="#3e2723"/><circle cx="30" cy="26" r="3" fill="#3e2723"/><circle cx="36" cy="28" r="3" fill="#3e2723"/></svg>',
+"अननस":'<svg viewBox="0 0 60 60"><path d="M18 18 Q18 8 30 6 Q42 8 42 18 L44 40 Q42 52 30 54 Q18 52 16 40 Z" fill="#FFD600"/><line x1="20" y1="26" x2="40" y2="26" stroke="#f9a825" stroke-width="2"/><line x1="20" y1="34" x2="40" y2="34" stroke="#f9a825" stroke-width="2"/><line x1="20" y1="42" x2="40" y2="42" stroke="#f9a825" stroke-width="2"/><line x1="24" y1="20" x2="24" y2="48" stroke="#f9a825" stroke-width="2"/><line x1="30" y1="18" x2="30" y2="50" stroke="#f9a825" stroke-width="2"/><line x1="36" y1="20" x2="36" y2="48" stroke="#f9a825" stroke-width="2"/><path d="M22 8 Q26 2 30 6 Q34 2 38 8" fill="none" stroke="#33691e" stroke-width="2.5"/></svg>',
+"खजूर":'<svg viewBox="0 0 60 60"><ellipse cx="30" cy="36" rx="14" ry="18" fill="#8d6e63"/><ellipse cx="30" cy="30" rx="12" ry="14" fill="#a1887f"/><ellipse cx="30" cy="28" rx="9" ry="11" fill="#bcaaa4" opacity="0.5"/><line x1="30" y1="18" x2="30" y2="8" stroke="#5d4037" stroke-width="2.5"/><path d="M20 14 Q24 8 30 10 Q36 8 40 14" fill="none" stroke="#2e7d32" stroke-width="2"/></svg>',
+"चेरी":'<svg viewBox="0 0 60 60"><circle cx="22" cy="36" r="12" fill="#b71c1c"/><circle cx="38" cy="36" r="12" fill="#c62828"/><path d="M22 24 Q26 12 30 8 Q34 12 38 24" fill="none" stroke="#33691e" stroke-width="2.5"/><circle cx="20" cy="32" r="5" fill="#ef9a9a" opacity="0.4"/><circle cx="36" cy="32" r="5" fill="#ef9a9a" opacity="0.4"/></svg>',
+"लिंबू":'<svg viewBox="0 0 60 60"><ellipse cx="30" cy="30" rx="20" ry="16" fill="#FFF176"/><ellipse cx="30" cy="30" rx="20" ry="16" fill="none" stroke="#F9A825" stroke-width="2"/><ellipse cx="16" cy="30" rx="5" ry="10" fill="#FFEE58" opacity="0.5"/><line x1="34" y1="18" x2="38" y2="12" stroke="#f9a825" stroke-width="2"/></svg>',
+"टरबूज":'<svg viewBox="0 0 60 60"><path d="M8 30 Q10 10 30 8 Q50 10 52 30" fill="#4caf50"/><path d="M8 30 Q10 50 30 52 Q50 50 52 30" fill="#e53935"/><path d="M8 30 Q10 52 30 54 Q50 52 52 30" fill="none" stroke="#4caf50" stroke-width="3"/><circle cx="22" cy="34" r="2.5" fill="#212121"/><circle cx="30" cy="38" r="2.5" fill="#212121"/><circle cx="38" cy="34" r="2.5" fill="#212121"/><circle cx="26" cy="44" r="2.5" fill="#212121"/><circle cx="34" cy="44" r="2.5" fill="#212121"/></svg>',
+
+// ── अन्न ──
+"भात":'<svg viewBox="0 0 60 60"><ellipse cx="30" cy="38" rx="24" ry="14" fill="#f5f5f5"/><ellipse cx="30" cy="36" rx="22" ry="12" fill="#ffffff"/><ellipse cx="22" cy="30" rx="3" ry="5" fill="#eeeeee" transform="rotate(-20 22 30)"/><ellipse cx="30" cy="28" rx="3" ry="5" fill="#eeeeee"/><ellipse cx="38" cy="30" rx="3" ry="5" fill="#eeeeee" transform="rotate(20 38 30)"/><ellipse cx="26" cy="34" rx="3" ry="5" fill="#eeeeee" transform="rotate(-10 26 34)"/><ellipse cx="34" cy="34" rx="3" ry="5" fill="#eeeeee" transform="rotate(10 34 34)"/></svg>',
+"पोळी":'<svg viewBox="0 0 60 60"><ellipse cx="30" cy="32" rx="24" ry="20" fill="#FFCC80"/><ellipse cx="30" cy="32" rx="24" ry="20" fill="none" stroke="#FF8F00" stroke-width="1.5" stroke-dasharray="3,3"/><circle cx="22" cy="28" r="4" fill="#FFB74D" opacity="0.6"/><circle cx="35" cy="24" r="3" fill="#FFB74D" opacity="0.6"/><circle cx="28" cy="38" r="3.5" fill="#FFB74D" opacity="0.6"/></svg>',
+"डाळ":'<svg viewBox="0 0 60 60"><ellipse cx="30" cy="40" rx="24" ry="14" fill="#FFD54F"/><ellipse cx="30" cy="38" rx="22" ry="12" fill="#FFCA28"/><ellipse cx="22" cy="32" rx="5" ry="4" fill="#FFF176" opacity="0.7"/><ellipse cx="32" cy="30" rx="5" ry="4" fill="#FFF176" opacity="0.7"/><ellipse cx="24" cy="40" rx="4" ry="3" fill="#FFF176" opacity="0.5"/><ellipse cx="36" cy="38" rx="4" ry="3" fill="#FFF176" opacity="0.5"/></svg>',
+"दूध":'<svg viewBox="0 0 60 60"><rect x="18" y="16" width="24" height="36" rx="4" fill="#f5f5f5" stroke="#e0e0e0" stroke-width="2"/><rect x="20" y="10" width="20" height="8" rx="2" fill="#eeeeee" stroke="#e0e0e0" stroke-width="1.5"/><rect x="22" y="12" width="16" height="4" rx="1" fill="#fafafa"/><text x="30" y="40" text-anchor="middle" font-size="10" fill="#bdbdbd" font-family="sans-serif">दूध</text></svg>',
+"दही":'<svg viewBox="0 0 60 60"><ellipse cx="30" cy="40" rx="22" ry="12" fill="#f5f5f5"/><rect x="8" y="22" width="44" height="20" rx="3" fill="#fafafa" stroke="#e0e0e0" stroke-width="1.5"/><ellipse cx="30" cy="22" rx="22" ry="8" fill="#eeeeee"/><ellipse cx="30" cy="22" rx="16" ry="5" fill="#fafafa"/></svg>',
+"तूप":'<svg viewBox="0 0 60 60"><rect x="16" y="20" width="28" height="30" rx="4" fill="#FFD600"/><rect x="18" y="14" width="24" height="8" rx="2" fill="#FFC107"/><rect x="20" y="16" width="20" height="5" rx="1" fill="#FFEE58"/><ellipse cx="30" cy="50" rx="16" ry="5" fill="#FFA000" opacity="0.4"/></svg>',
+"लाडू":'<svg viewBox="0 0 60 60"><circle cx="30" cy="32" r="20" fill="#FF8F00"/><circle cx="30" cy="32" r="20" fill="none" stroke="#E65100" stroke-width="2"/><circle cx="22" cy="26" r="5" fill="#FFA726" opacity="0.6"/><circle cx="36" cy="28" r="4" fill="#FFA726" opacity="0.6"/><circle cx="26" cy="38" r="4" fill="#FFA726" opacity="0.6"/><circle cx="36" cy="38" r="5" fill="#FF8F00" opacity="0.3"/></svg>',
+"वडा":'<svg viewBox="0 0 60 60"><circle cx="30" cy="32" r="20" fill="#8d6e63"/><circle cx="30" cy="32" r="20" fill="none" stroke="#6d4c41" stroke-width="2"/><circle cx="30" cy="32" r="8" fill="#5d4037"/><circle cx="30" cy="32" r="8" fill="none" stroke="#4e342e" stroke-width="1.5"/><circle cx="20" cy="26" r="3" fill="#795548" opacity="0.6"/><circle cx="38" cy="28" r="3" fill="#795548" opacity="0.6"/></svg>',
+"मोदक":'<svg viewBox="0 0 60 60"><path d="M30 52 Q16 48 14 32 Q14 16 30 12 Q46 16 46 32 Q44 48 30 52Z" fill="#f5f5f5"/><path d="M30 12 Q22 16 18 24 Q14 32 16 40 Q20 50 30 52" fill="none" stroke="#e0e0e0" stroke-width="2"/><path d="M30 12 Q38 16 42 24 Q46 32 44 40 Q40 50 30 52" fill="none" stroke="#e0e0e0" stroke-width="2"/><line x1="30" y1="8" x2="30" y2="4" stroke="#ff8f00" stroke-width="3"/></svg>',
+"इडली":'<svg viewBox="0 0 60 60"><ellipse cx="30" cy="32" rx="22" ry="14" fill="#f5f5f5"/><ellipse cx="30" cy="30" rx="20" ry="12" fill="#fafafa"/><ellipse cx="22" cy="28" rx="6" ry="4" fill="#eeeeee" opacity="0.6"/><ellipse cx="38" cy="28" rx="6" ry="4" fill="#eeeeee" opacity="0.6"/></svg>',
+
+// ── शरीर ──
+"डोळे":'<svg viewBox="0 0 60 60"><path d="M8 30 Q16 18 30 18 Q44 18 52 30 Q44 42 30 42 Q16 42 8 30Z" fill="#fff"/><circle cx="30" cy="30" r="9" fill="#3e2723"/><circle cx="30" cy="30" r="5" fill="#1a237e"/><circle cx="27" cy="27" r="2" fill="#fff"/></svg>',
+"कान":'<svg viewBox="0 0 60 60"><path d="M20 14 Q8 20 8 30 Q8 42 20 48 Q28 52 30 44 Q22 42 20 36 Q18 30 22 26 Q26 20 30 22 Q34 24 32 30 Q30 36 26 36" fill="none" stroke="#d7a57a" stroke-width="8" stroke-linecap="round"/><path d="M20 14 Q14 14 12 20" fill="#e8c49a" stroke="#d7a57a" stroke-width="2"/></svg>',
+"नाक":'<svg viewBox="0 0 60 60"><path d="M30 12 Q28 22 24 32 Q20 40 18 44 Q22 48 28 46 Q30 42 30 42 Q30 42 32 46 Q38 48 42 44 Q40 40 36 32 Q32 22 30 12Z" fill="#e8c49a" stroke="#d7a57a" stroke-width="1.5"/></svg>',
+"हात":'<svg viewBox="0 0 60 60"><rect x="22" y="30" width="8" height="20" rx="4" fill="#e8c49a"/><rect x="32" y="26" width="7" height="20" rx="3.5" fill="#e8c49a"/><rect x="14" y="30" width="7" height="18" rx="3.5" fill="#e8c49a"/><rect x="40" y="28" width="7" height="17" rx="3.5" fill="#e8c49a"/><rect x="16" y="40" width="32" height="14" rx="6" fill="#e8c49a"/></svg>',
+"पाय":'<svg viewBox="0 0 60 60"><rect x="18" y="8" width="12" height="38" rx="6" fill="#e8c49a"/><rect x="30" y="8" width="12" height="38" rx="6" fill="#d7a57a"/><rect x="14" y="42" width="16" height="10" rx="4" fill="#e8c49a"/><rect x="32" y="42" width="16" height="10" rx="4" fill="#d7a57a"/></svg>',
+"केस":'<svg viewBox="0 0 60 60"><path d="M14 24 Q12 10 24 8 Q30 6 36 8 Q48 10 46 24" fill="#3e2723"/><path d="M14 24 Q14 40 20 50 Q18 54 14 54" fill="#3e2723" stroke="#3e2723" stroke-width="2"/><path d="M46 24 Q46 40 40 50 Q42 54 46 54" fill="#3e2723" stroke="#3e2723" stroke-width="2"/><path d="M22 8 Q24 4 30 4 Q36 4 38 8" fill="#3e2723"/></svg>',
+
+// ── कपडे ──
+"साडी":'<svg viewBox="0 0 60 60"><rect x="8" y="16" width="44" height="30" rx="3" fill="#e91e63"/><rect x="8" y="16" width="44" height="30" rx="3" fill="none" stroke="#c2185b" stroke-width="2"/><line x1="8" y1="28" x2="52" y2="28" stroke="#f48fb1" stroke-width="2"/><line x1="8" y1="22" x2="52" y2="22" stroke="#f48fb1" stroke-width="1"/><circle cx="16" cy="20" r="2" fill="#ffd700"/><circle cx="24" cy="20" r="2" fill="#ffd700"/><circle cx="32" cy="20" r="2" fill="#ffd700"/><circle cx="40" cy="20" r="2" fill="#ffd700"/><circle cx="48" cy="20" r="2" fill="#ffd700"/></svg>',
+"शर्ट":'<svg viewBox="0 0 60 60"><path d="M18 10 L10 20 L18 24 L18 50 L42 50 L42 24 L50 20 L42 10 L36 16 Q30 20 24 16 Z" fill="#1976d2"/><path d="M18 10 L10 20 L18 24 L18 50 L42 50 L42 24 L50 20 L42 10" fill="none" stroke="#1565c0" stroke-width="1.5"/><line x1="26" y1="16" x2="26" y2="50" stroke="#1565c0" stroke-width="1" stroke-dasharray="2,3"/></svg>',
+"पँट":'<svg viewBox="0 0 60 60"><path d="M10 10 L10 40 L26 40 L30 54 L34 40 L50 40 L50 10 Z" fill="#37474f"/><line x1="30" y1="10" x2="30" y2="40" stroke="#546e7a" stroke-width="2"/><line x1="10" y1="18" x2="50" y2="18" stroke="#455a64" stroke-width="1.5"/></svg>',
+
+// ── व्यवसाय - काही extras ──
+"शेतकरी":'<svg viewBox="0 0 60 60"><circle cx="30" cy="18" r="10" fill="#e8c49a"/><rect x="20" y="26" width="20" height="20" rx="3" fill="#558b2f"/><rect x="16" y="26" width="8" height="18" rx="3" fill="#558b2f"/><rect x="36" y="26" width="8" height="18" rx="3" fill="#558b2f"/><path d="M10 20 Q20 14 30 18 Q40 14 50 20" fill="#8d6e63" stroke="#6d4c41" stroke-width="2"/><line x1="38" y1="36" x2="52" y2="28" stroke="#795548" stroke-width="3"/></svg>',
+// ── रंग SVG ──
+"लाल":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="56" height="56" rx="10" fill="#e53935" stroke="#c62828" stroke-width="3"/><text x="30" y="36" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif" font-weight="bold">लाल</text></svg>',
+"पिवळा":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="56" height="56" rx="10" fill="#FDD835" stroke="#F9A825" stroke-width="3"/><text x="30" y="36" text-anchor="middle" fill="#212121" font-size="9" font-family="sans-serif" font-weight="bold">पिवळा</text></svg>',
+"निळा":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="56" height="56" rx="10" fill="#1976D2" stroke="#0D47A1" stroke-width="3"/><text x="30" y="36" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif" font-weight="bold">निळा</text></svg>',
+"हिरवा":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="56" height="56" rx="10" fill="#43A047" stroke="#2E7D32" stroke-width="3"/><text x="30" y="36" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif" font-weight="bold">हिरवा</text></svg>',
+"पांढरा":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="56" height="56" rx="10" fill="#F5F5F5" stroke="#bdbdbd" stroke-width="3"/><text x="30" y="36" text-anchor="middle" fill="#212121" font-size="9" font-family="sans-serif" font-weight="bold">पांढरा</text></svg>',
+"काळा":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="56" height="56" rx="10" fill="#212121" stroke="#000" stroke-width="3"/><text x="30" y="36" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif" font-weight="bold">काळा</text></svg>',
+"नारंगी":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="56" height="56" rx="10" fill="#FB8C00" stroke="#E65100" stroke-width="3"/><text x="30" y="36" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif" font-weight="bold">नारंगी</text></svg>',
+"गुलाबी":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="56" height="56" rx="10" fill="#E91E63" stroke="#880E4F" stroke-width="3"/><text x="30" y="36" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif" font-weight="bold">गुलाबी</text></svg>',
+"जांभळा":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="56" height="56" rx="10" fill="#8E24AA" stroke="#4A148C" stroke-width="3"/><text x="30" y="36" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif" font-weight="bold">जांभळा</text></svg>',
+"तपकिरी":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="56" height="56" rx="10" fill="#795548" stroke="#3E2723" stroke-width="3"/><text x="30" y="36" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif" font-weight="bold">तपकिरी</text></svg>',
+"राखाडी":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="56" height="56" rx="10" fill="#9E9E9E" stroke="#616161" stroke-width="3"/><text x="30" y="36" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif" font-weight="bold">राखाडी</text></svg>',
+"सोनेरी":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="56" height="56" rx="10" fill="#FFD600" stroke="#F9A825" stroke-width="3"/><text x="30" y="36" text-anchor="middle" fill="#212121" font-size="9" font-family="sans-serif" font-weight="bold">सोनेरी</text></svg>',
+"चंदेरी":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="56" height="56" rx="10" fill="#B0BEC5" stroke="#78909C" stroke-width="3"/><text x="30" y="36" text-anchor="middle" fill="#212121" font-size="9" font-family="sans-serif" font-weight="bold">चंदेरी</text></svg>',
+"आसमानी":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="56" height="56" rx="10" fill="#29B6F6" stroke="#0277BD" stroke-width="3"/><text x="30" y="36" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif" font-weight="bold">आसमानी</text></svg>',
+"भगवा":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="56" height="56" rx="10" fill="#FF6F00" stroke="#E65100" stroke-width="3"/><text x="30" y="36" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif" font-weight="bold">भगवा</text></svg>',
+"मोरपंखी":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="56" height="56" rx="10" fill="#00897B" stroke="#004D40" stroke-width="3"/><text x="30" y="36" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif" font-weight="bold">मोरपंखी</text></svg>',
+"गर्द निळा":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="56" height="56" rx="10" fill="#0D47A1" stroke="#01579B" stroke-width="3"/><text x="30" y="36" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif" font-weight="bold">गर्द निळा</text></svg>',
+"ऑलिव्ह":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="56" height="56" rx="10" fill="#827717" stroke="#558B2F" stroke-width="3"/><text x="30" y="36" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif" font-weight="bold">ऑलिव्ह</text></svg>',
+"मरून":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="56" height="56" rx="10" fill="#B71C1C" stroke="#7F0000" stroke-width="3"/><text x="30" y="36" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif" font-weight="bold">मरून</text></svg>',
+"लिंबू पिवळा":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="56" height="56" rx="10" fill="#F9A825" stroke="#F57F17" stroke-width="3"/><text x="30" y="36" text-anchor="middle" fill="#212121" font-size="9" font-family="sans-serif" font-weight="bold">लिंबू पिवळा</text></svg>',
+"गडद हिरवा":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="56" height="56" rx="10" fill="#1B5E20" stroke="#194D19" stroke-width="3"/><text x="30" y="36" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif" font-weight="bold">गडद हिरवा</text></svg>',
+"फिकट निळा":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="56" height="56" rx="10" fill="#90CAF9" stroke="#42A5F5" stroke-width="3"/><text x="30" y="36" text-anchor="middle" fill="#212121" font-size="9" font-family="sans-serif" font-weight="bold">फिकट निळा</text></svg>',
+"फिकट गुलाबी":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="56" height="56" rx="10" fill="#F48FB1" stroke="#EC407A" stroke-width="3"/><text x="30" y="36" text-anchor="middle" fill="#212121" font-size="9" font-family="sans-serif" font-weight="bold">फिकट गुलाबी</text></svg>',
+"क्रीम":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="56" height="56" rx="10" fill="#FFF9C4" stroke="#F9A825" stroke-width="3"/><text x="30" y="36" text-anchor="middle" fill="#212121" font-size="9" font-family="sans-serif" font-weight="bold">क्रीम</text></svg>',
+"बेज":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="56" height="56" rx="10" fill="#F5F5DC" stroke="#bdbdbd" stroke-width="3"/><text x="30" y="36" text-anchor="middle" fill="#212121" font-size="9" font-family="sans-serif" font-weight="bold">बेज</text></svg>',
+"स्कारलेट":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="56" height="56" rx="10" fill="#C62828" stroke="#B71C1C" stroke-width="3"/><text x="30" y="36" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif" font-weight="bold">स्कारलेट</text></svg>',
+"इंडिगो":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="56" height="56" rx="10" fill="#283593" stroke="#1A237E" stroke-width="3"/><text x="30" y="36" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif" font-weight="bold">इंडिगो</text></svg>',
+"व्हायलेट":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="56" height="56" rx="10" fill="#6A1B9A" stroke="#4A148C" stroke-width="3"/><text x="30" y="36" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif" font-weight="bold">व्हायलेट</text></svg>',
+"मॅजेंटा":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="56" height="56" rx="10" fill="#AD1457" stroke="#880E4F" stroke-width="3"/><text x="30" y="36" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif" font-weight="bold">मॅजेंटा</text></svg>',
+"सियान":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="56" height="56" rx="10" fill="#00ACC1" stroke="#006064" stroke-width="3"/><text x="30" y="36" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif" font-weight="bold">सियान</text></svg>',
+"कोरल":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="56" height="56" rx="10" fill="#E64A19" stroke="#BF360C" stroke-width="3"/><text x="30" y="36" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif" font-weight="bold">कोरल</text></svg>',
+"टर्क्वाइज":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="56" height="56" rx="10" fill="#00796B" stroke="#004D40" stroke-width="3"/><text x="30" y="36" text-anchor="middle" fill="#fff" font-size="9" font-family="sans-serif" font-weight="bold">टर्क्वाइज</text></svg>',
+"विट्टी-दांडू":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="24" width="44" height="8" rx="4" fill="#6d4c41" transform="rotate(-12 27 28)"/><rect x="40" y="20" width="14" height="10" rx="5" fill="#8d6e63" transform="rotate(-12 47 25)"/><rect x="18" y="44" width="24" height="6" rx="3" fill="#5d4037"/><polygon points="18,44 18,50 13,47" fill="#4e342e"/><polygon points="42,44 42,50 47,47" fill="#4e342e"/><line x1="4" y1="52" x2="56" y2="52" stroke="#a1887f" stroke-width="2"/></svg>',
+
+// ── extra fruits + items SVG ──
+"अंजीर":'<svg viewBox="0 0 60 60"><ellipse cx="30" cy="36" rx="16" ry="18" fill="#7b1fa2"/><ellipse cx="30" cy="36" rx="12" ry="14" fill="#9c27b0" opacity="0.6"/><circle cx="30" cy="36" r="4" fill="#e1bee7"/><rect x="27" y="12" width="6" height="16" rx="3" fill="#388e3c"/><ellipse cx="22" cy="18" rx="7" ry="4" fill="#43a047" transform="rotate(-30 22 18)"/></svg>',
+"आवळा":'<svg viewBox="0 0 60 60"><circle cx="30" cy="34" r="18" fill="#c5e1a5"/><circle cx="30" cy="34" r="14" fill="#aed581" opacity="0.7"/><line x1="20" y1="26" x2="40" y2="42" stroke="#7cb342" stroke-width="1.5"/><line x1="40" y1="26" x2="20" y2="42" stroke="#7cb342" stroke-width="1.5"/><line x1="30" y1="20" x2="30" y2="48" stroke="#7cb342" stroke-width="1.5"/><rect x="27" y="10" width="6" height="12" rx="3" fill="#388e3c"/></svg>',
+"मोसंबी":'<svg viewBox="0 0 60 60"><circle cx="30" cy="34" r="20" fill="#f9a825"/><circle cx="30" cy="34" r="15" fill="#ffcc02" opacity="0.5"/><ellipse cx="22" cy="27" rx="4" ry="6" fill="#ffd54f" opacity="0.4"/><rect x="27" y="8" width="6" height="14" rx="3" fill="#388e3c"/><ellipse cx="22" cy="14" rx="7" ry="4" fill="#43a047" transform="rotate(-20 22 14)"/></svg>',
+"बोर":'<svg viewBox="0 0 60 60"><ellipse cx="30" cy="34" rx="15" ry="18" fill="#c62828"/><ellipse cx="30" cy="34" rx="11" ry="14" fill="#e53935" opacity="0.6"/><ellipse cx="24" cy="27" rx="3" ry="5" fill="#ef9a9a" opacity="0.5"/><rect x="28" y="10" width="4" height="14" rx="2" fill="#388e3c"/></svg>',
+"करवंद":'<svg viewBox="0 0 60 60"><circle cx="22" cy="36" r="12" fill="#1a237e"/><circle cx="38" cy="36" r="12" fill="#283593"/><circle cx="30" cy="30" r="12" fill="#303f9f"/><circle cx="20" cy="34" r="4" fill="#7986cb" opacity="0.4"/><rect x="28" y="10" width="4" height="14" rx="2" fill="#388e3c"/></svg>',
+"कवठ":'<svg viewBox="0 0 60 60"><ellipse cx="30" cy="34" rx="20" ry="18" fill="#8d6e63"/><ellipse cx="30" cy="34" rx="16" ry="14" fill="#a1887f" opacity="0.7"/><ellipse cx="23" cy="27" rx="5" ry="7" fill="#bcaaa4" opacity="0.4"/><rect x="27" y="10" width="6" height="14" rx="3" fill="#5d4037"/></svg>',
+"जर्दाळू":'<svg viewBox="0 0 60 60"><circle cx="30" cy="34" r="19" fill="#ff8f00"/><circle cx="30" cy="34" r="15" fill="#ffa000" opacity="0.6"/><ellipse cx="22" cy="27" rx="4" ry="7" fill="#ffca28" opacity="0.5"/><path d="M27 14 Q30 8 33 14" fill="none" stroke="#388e3c" stroke-width="2"/><rect x="28" y="12" width="4" height="10" rx="2" fill="#388e3c"/></svg>',
+"बेदाणा":'<svg viewBox="0 0 60 60"><circle cx="20" cy="38" r="8" fill="#6a1b9a"/><circle cx="32" cy="34" r="8" fill="#7b1fa2"/><circle cx="40" cy="38" r="8" fill="#8e24aa"/><circle cx="26" cy="28" r="8" fill="#7b1fa2"/><circle cx="38" cy="28" r="7" fill="#6a1b9a"/><rect x="28" y="10" width="4" height="12" rx="2" fill="#388e3c"/></svg>',
+"लिची":'<svg viewBox="0 0 60 60"><ellipse cx="30" cy="34" rx="17" ry="19" fill="#e53935"/><ellipse cx="30" cy="34" rx="13" ry="15" fill="#ef5350" opacity="0.5"/><path d="M15 28 Q16 20 22 18 Q28 16 35 18 Q42 20 44 28" fill="none" stroke="#b71c1c" stroke-width="1.5"/><path d="M15 36 Q16 44 22 46 Q28 48 35 46 Q42 44 44 36" fill="none" stroke="#b71c1c" stroke-width="1.5"/><rect x="28" y="10" width="4" height="10" rx="2" fill="#388e3c"/></svg>',
+"ड्रॅगन फ्रुट":'<svg viewBox="0 0 60 60"><ellipse cx="30" cy="34" rx="18" ry="20" fill="#e91e63"/><ellipse cx="30" cy="34" rx="12" ry="14" fill="#f8bbd0"/><circle cx="24" cy="30" r="2" fill="#212121"/><circle cx="32" cy="26" r="2" fill="#212121"/><circle cx="36" cy="34" r="2" fill="#212121"/><circle cx="26" cy="38" r="2" fill="#212121"/><path d="M26 10 Q30 4 34 10" fill="#4caf50" stroke="#388e3c" stroke-width="1"/><path d="M20 14 Q18 8 24 10" fill="#4caf50"/><path d="M40 14 Q42 8 36 10" fill="#4caf50"/></svg>',
+"पॅशन फ्रुट":'<svg viewBox="0 0 60 60"><circle cx="30" cy="34" r="20" fill="#6a1b9a"/><circle cx="30" cy="34" r="15" fill="#9c27b0" opacity="0.5"/><circle cx="30" cy="34" r="8" fill="#f3e5f5"/><line x1="30" y1="26" x2="30" y2="42" stroke="#7b1fa2" stroke-width="1.5"/><line x1="22" y1="30" x2="38" y2="38" stroke="#7b1fa2" stroke-width="1.5"/><line x1="22" y1="38" x2="38" y2="30" stroke="#7b1fa2" stroke-width="1.5"/><circle cx="30" cy="34" r="4" fill="#ce93d8"/><rect x="28" y="10" width="4" height="12" rx="2" fill="#388e3c"/></svg>',
+"रबर":'<svg viewBox="0 0 60 60"><rect x="10" y="20" width="40" height="24" rx="5" fill="#ef9a9a"/><rect x="10" y="30" width="40" height="14" rx="0 0 5 5" fill="#e57373"/><rect x="14" y="24" width="6" height="20" rx="2" fill="#c62828" opacity="0.3"/><text x="30" y="37" text-anchor="middle" fill="#b71c1c" font-size="9" font-weight="bold">रबर</text></svg>',
+"गोट्या":'<svg viewBox="0 0 60 60"><circle cx="20" cy="38" r="9" fill="#1976d2"/><circle cx="16" cy="35" r="3" fill="#90caf9" opacity="0.6"/><circle cx="40" cy="36" r="9" fill="#e53935"/><circle cx="36" cy="33" r="3" fill="#ef9a9a" opacity="0.6"/><circle cx="30" cy="46" r="9" fill="#388e3c"/><circle cx="26" cy="43" r="3" fill="#a5d6a7" opacity="0.6"/></svg>',
+
+// ── फळे (सुधारित SVG) ──
+"केळे":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><path d="M12 38 Q10 20 22 12 Q32 6 44 10 Q48 12 46 16 Q44 20 40 18 Q30 16 22 22 Q16 30 18 42 Q20 50 14 48 Q10 44 12 38Z" fill="#FFD600"/><path d="M14 40 Q12 24 24 16 Q34 10 44 14" fill="none" stroke="#F9A825" stroke-width="2"/><path d="M22 8 Q26 4 30 8" fill="none" stroke="#388e3c" stroke-width="3" stroke-linecap="round"/></svg>',
+"तुती":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><ellipse cx="30" cy="40" rx="8" ry="12" fill="#4a148c"/><circle cx="26" cy="32" r="6" fill="#6a1b9a"/><circle cx="34" cy="32" r="6" fill="#6a1b9a"/><circle cx="30" cy="26" r="5" fill="#7b1fa2"/><circle cx="24" cy="38" r="5" fill="#4a148c"/><circle cx="36" cy="38" r="5" fill="#4a148c"/><circle cx="30" cy="46" r="6" fill="#38006b"/><path d="M30 10 Q26 14 28 18 M30 10 Q34 14 32 18 M30 10 L30 16" fill="none" stroke="#2e7d32" stroke-width="2" stroke-linecap="round"/></svg>',
+"आंबा":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><path d="M30 52 Q14 50 10 36 Q8 24 16 16 Q22 10 30 12 Q42 14 48 26 Q54 40 44 50 Q38 54 30 52Z" fill="#FFB300"/><path d="M20 20 Q14 30 16 42 Q20 50 30 52" fill="none" stroke="#FF8F00" stroke-width="2"/><ellipse cx="24" cy="22" rx="6" ry="8" fill="#FFD54F" opacity="0.4"/><rect x="27" y="6" width="6" height="10" rx="3" fill="#388e3c"/></svg>',
+"सफरचंद":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><path d="M30 52 Q14 50 10 36 Q8 22 18 14 Q24 10 30 12 Q36 10 42 14 Q52 22 50 36 Q46 50 30 52Z" fill="#e53935"/><path d="M30 12 Q36 6 42 10 Q36 14 30 12Z" fill="#43a047"/><rect x="28" y="6" width="4" height="8" rx="2" fill="#5d4037"/><ellipse cx="22" cy="24" rx="5" ry="8" fill="#ef9a9a" opacity="0.35"/><path d="M30 12 Q30 18 30 24" fill="none" stroke="#c62828" stroke-width="1.5"/></svg>',
+"द्राक्षे":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><circle cx="22" cy="44" r="7" fill="#6a1b9a"/><circle cx="38" cy="44" r="7" fill="#7b1fa2"/><circle cx="30" cy="38" r="7" fill="#8e24aa"/><circle cx="18" cy="36" r="7" fill="#7b1fa2"/><circle cx="42" cy="36" r="7" fill="#6a1b9a"/><circle cx="26" cy="30" r="7" fill="#9c27b0"/><circle cx="34" cy="30" r="7" fill="#8e24aa"/><circle cx="30" cy="22" r="7" fill="#ab47bc"/><rect x="28" y="8" width="4" height="12" rx="2" fill="#5d4037"/><path d="M30 8 Q22 10 20 18 M30 8 Q38 10 40 18" fill="none" stroke="#388e3c" stroke-width="2"/></svg>',
+"संत्रे":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><circle cx="30" cy="34" r="20" fill="#FF6D00"/><circle cx="30" cy="34" r="15" fill="#FF8F00" opacity="0.4"/><line x1="30" y1="18" x2="30" y2="50" stroke="#E65100" stroke-width="1.5"/><line x1="14" y1="34" x2="46" y2="34" stroke="#E65100" stroke-width="1.5"/><line x1="16" y1="24" x2="44" y2="44" stroke="#E65100" stroke-width="1"/><line x1="16" y1="44" x2="44" y2="24" stroke="#E65100" stroke-width="1"/><ellipse cx="22" cy="26" rx="4" ry="6" fill="#FFCC80" opacity="0.4"/><rect x="27" y="8" width="6" height="10" rx="3" fill="#388e3c"/></svg>',
+"डाळिंब":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><circle cx="30" cy="37" r="20" fill="#c62828"/><circle cx="30" cy="37" r="15" fill="#e53935" opacity="0.5"/><path d="M23 18 L25 12 L27 18 M29 16 L31 10 L33 16 M35 18 L37 12 L39 18" fill="none" stroke="#b71c1c" stroke-width="2.5" stroke-linecap="round"/><rect x="27" y="8" width="6" height="8" rx="1" fill="#6a1b9a"/><circle cx="24" cy="35" r="2" fill="#ffcdd2"/><circle cx="30" cy="32" r="2" fill="#ffcdd2"/><circle cx="36" cy="35" r="2" fill="#ffcdd2"/><circle cx="27" cy="41" r="2" fill="#ffcdd2"/><circle cx="33" cy="41" r="2" fill="#ffcdd2"/></svg>',
+"नारळ":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><ellipse cx="30" cy="38" rx="20" ry="17" fill="#5d4037"/><ellipse cx="30" cy="38" rx="16" ry="13" fill="#795548"/><circle cx="24" cy="32" r="3" fill="#3e2723" opacity="0.8"/><circle cx="31" cy="30" r="3" fill="#3e2723" opacity="0.8"/><circle cx="37" cy="32" r="3" fill="#3e2723" opacity="0.8"/><ellipse cx="24" cy="38" rx="5" ry="4" fill="#6d4c41" opacity="0.5"/><path d="M30 22 Q20 18 14 24 M30 22 Q22 16 18 10 M30 22 Q38 16 42 10 M30 22 Q40 18 46 24" fill="none" stroke="#4caf50" stroke-width="2" stroke-linecap="round"/></svg>',
+"अननस":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><path d="M20 50 Q16 38 18 26 Q20 16 30 14 Q40 16 42 26 Q44 38 40 50 Q36 56 30 56 Q24 56 20 50Z" fill="#FFD600"/><line x1="20" y1="30" x2="40" y2="30" stroke="#F9A825" stroke-width="1.5"/><line x1="20" y1="37" x2="40" y2="37" stroke="#F9A825" stroke-width="1.5"/><line x1="20" y1="44" x2="40" y2="44" stroke="#F9A825" stroke-width="1.5"/><line x1="24" y1="24" x2="24" y2="50" stroke="#F9A825" stroke-width="1.5"/><line x1="30" y1="22" x2="30" y2="52" stroke="#F9A825" stroke-width="1.5"/><line x1="36" y1="24" x2="36" y2="50" stroke="#F9A825" stroke-width="1.5"/><path d="M22 14 Q20 6 18 4 M27 12 L26 4 M30 12 L30 4 M33 12 L34 4 M38 14 Q40 6 42 4 M26 12 Q20 6 16 8 M34 12 Q40 6 44 8" fill="none" stroke="#388e3c" stroke-width="2.5" stroke-linecap="round"/></svg>',
+"खजूर":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><rect x="28" y="42" width="4" height="14" fill="#795548"/><ellipse cx="22" cy="36" rx="7" ry="9" fill="#8d6e63"/><ellipse cx="38" cy="38" rx="7" ry="9" fill="#7d5f52"/><ellipse cx="30" cy="32" rx="7" ry="9" fill="#a1887f"/><ellipse cx="18" cy="30" rx="5" ry="7" fill="#8d6e63"/><ellipse cx="42" cy="32" rx="5" ry="7" fill="#795548"/><path d="M30 20 Q20 18 14 24 M30 20 Q22 16 18 10 M30 20 Q38 16 42 10 M30 20 Q40 18 46 24" fill="none" stroke="#4caf50" stroke-width="2" stroke-linecap="round"/></svg>',
+"चेरी":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="42" r="12" fill="#b71c1c"/><circle cx="40" cy="44" r="12" fill="#c62828"/><circle cx="16" cy="38" r="4" fill="#ef5350" opacity="0.4"/><circle cx="36" cy="40" r="4" fill="#ef5350" opacity="0.4"/><path d="M20 30 Q20 20 30 16 Q38 14 40 32" fill="none" stroke="#2e7d32" stroke-width="2.5"/><path d="M30 16 Q32 10 30 6" fill="none" stroke="#2e7d32" stroke-width="2" stroke-linecap="round"/></svg>',
+"लिंबू":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><ellipse cx="30" cy="34" rx="20" ry="16" fill="#FFF176"/><ellipse cx="30" cy="34" rx="15" ry="11" fill="#FFEE58" opacity="0.5"/><ellipse cx="22" cy="28" rx="5" ry="7" fill="#FFFDE7" opacity="0.5"/><path d="M48 28 Q54 34 50 40" fill="none" stroke="#F9A825" stroke-width="2.5" stroke-linecap="round"/><rect x="27" y="14" width="6" height="10" rx="3" fill="#388e3c"/></svg>',
+"टरबूज":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><path d="M8 32 Q8 8 30 8 Q52 8 52 32 L8 32Z" fill="#4caf50"/><path d="M10 32 Q10 10 30 10 Q50 10 50 32 L10 32Z" fill="#81c784" opacity="0.6"/><path d="M12 32 Q12 14 30 14 Q48 14 48 32 L12 32Z" fill="#e53935"/><circle cx="20" cy="26" r="2" fill="#1b5e20"/><circle cx="28" cy="22" r="2" fill="#1b5e20"/><circle cx="36" cy="24" r="2" fill="#1b5e20"/><circle cx="42" cy="28" r="2" fill="#1b5e20"/><line x1="8" y1="32" x2="52" y2="32" stroke="#2e7d32" stroke-width="3.5"/></svg>',
+"पेरू":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><ellipse cx="30" cy="36" rx="18" ry="18" fill="#a5d6a7"/><ellipse cx="30" cy="36" rx="14" ry="14" fill="#66bb6a" opacity="0.5"/><ellipse cx="22" cy="28" rx="5" ry="7" fill="#e8f5e9" opacity="0.5"/><path d="M26 16 Q20 12 18 8 M30 14 L30 6 M34 16 Q40 12 42 8" fill="none" stroke="#2e7d32" stroke-width="2.5" stroke-linecap="round"/><circle cx="30" cy="52" r="3" fill="#2e7d32"/></svg>',
+"स्ट्रॉबेरी":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><path d="M30 54 Q14 46 12 32 Q10 18 22 14 Q30 12 38 14 Q50 18 48 32 Q46 46 30 54Z" fill="#e53935"/><circle cx="22" cy="28" r="1.5" fill="#ffcdd2"/><circle cx="30" cy="24" r="1.5" fill="#ffcdd2"/><circle cx="38" cy="28" r="1.5" fill="#ffcdd2"/><circle cx="26" cy="36" r="1.5" fill="#ffcdd2"/><circle cx="34" cy="36" r="1.5" fill="#ffcdd2"/><circle cx="30" cy="44" r="1.5" fill="#ffcdd2"/><path d="M26 14 Q22 6 24 4 M30 12 L30 4 M34 14 Q38 6 36 4 M22 16 Q14 10 12 8 M38 16 Q46 10 48 8" fill="none" stroke="#388e3c" stroke-width="2.5" stroke-linecap="round"/></svg>',
+"नाशपाती":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><path d="M30 52 Q16 50 12 38 Q10 26 18 20 Q22 16 26 18 Q28 10 30 8 Q32 10 34 18 Q38 16 42 20 Q50 26 48 38 Q44 50 30 52Z" fill="#c5e1a5"/><ellipse cx="22" cy="34" rx="5" ry="8" fill="#e8f5e9" opacity="0.5"/><rect x="27" y="4" width="6" height="8" rx="3" fill="#5d4037"/></svg>',
+"किवी":'<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><circle cx="30" cy="34" r="20" fill="#795548"/><circle cx="30" cy="34" r="17" fill="#a5d6a7"/><circle cx="30" cy="34" r="6" fill="#f9f9f9"/><line x1="30" y1="17" x2="30" y2="51" stroke="#4caf50" stroke-width="1.5"/><line x1="13" y1="34" x2="47" y2="34" stroke="#4caf50" stroke-width="1.5"/><line x1="18" y1="20" x2="42" y2="48" stroke="#4caf50" stroke-width="1.5"/><line x1="18" y1="48" x2="42" y2="20" stroke="#4caf50" stroke-width="1.5"/><circle cx="30" cy="34" r="4" fill="#e8f5e9"/></svg>',
+
+};
+
+// Render SVG in word card
+function wordPic(word,emoji,clicked,color){
+  var svg=WS[word];
+  if(svg){
+    return '<div style="width:54px;height:54px;margin:0 auto 4px;">'+svg+'</div>';
+  }
+  return '<div style="font-size:36px;line-height:54px;">'+emoji+'</div>';
+}
+
+
+// ═══ APP STATE ═══
+var S={tab:"main",subtab:"",clicked:"",bkSel:0,quizIdx:0,quizScore:0,quizDone:false,quizLevel:1,numRange:"१-२०",wordCat:0,sentLevel:1,paraLevel:1};
+var APP_TITLE="🏮 विवेक भंगाळे सरांचे शिकूया मराठी";
+
+function h(tag,props,children){
+  var el=document.createElement(tag);
+  if(props)Object.keys(props).forEach(function(k){
+    if(k==="style"&&typeof props[k]==="object"){Object.assign(el.style,props[k]);}
+    else if(k==="className"){el.className=props[k];}
+    else if(k==="onclick"){el.onclick=props[k];}
+    else if(k==="innerHTML"){el.innerHTML=props[k];}
+    else{el.setAttribute(k,props[k]);}
+  });
+  if(children){
+    if(!Array.isArray(children))children=[children];
+    function addChild(ch){
+      if(ch===null||ch===undefined)return;
+      if(Array.isArray(ch)){ch.forEach(addChild);return;}
+      if(typeof ch==="string"||typeof ch==="number"){el.appendChild(document.createTextNode(ch));}
+      else if(ch&&ch.nodeType){el.appendChild(ch);}
+    }
+    children.forEach(addChild);
+  }
+  return el;
+}
+function speakSlow(txt,id){
+  // For barakhaadi: speak slowly and clearly
+  if(!MUTED && txt){
+    _speakToken++;
+    var myToken=_speakToken;
+    stopAudio();
+    if(window.speechSynthesis){speechSynthesis.cancel();}
+    googleTTS(txt,"mr").catch(function(){
+      if(myToken!==_speakToken)return;
+      if(window.speechSynthesis){speechSynthesis.cancel();}
+      setTimeout(function(){
+        var u=new SpeechSynthesisUtterance(txt);
+        if(_bestVoice)u.voice=_bestVoice;
+        u.lang=_bestVoice?_bestVoice.lang:"hi-IN";
+        u.rate=0.6; u.pitch=1.0; u.volume=1; // very slow and clear
+        speechSynthesis.speak(u);
+      },60);
+    });
+  }
+  var prev=document.querySelector(".p");
+  if(prev)prev.classList.remove("p");
+  var el=document.getElementById("c_"+id);
+  if(el){el.classList.add("p");}
+  S.clicked=id; render();
+}
+function tap(txt,id){
+  speak(txt);
+  var prev=document.querySelector(".p");
+  if(prev)prev.classList.remove("p");
+  var el=document.getElementById("c_"+id);
+  if(el){el.classList.add("p");}
+  S.clicked=id; render();
+}
+function setTab(t){S.tab=t;S.clicked="";render();}
+function re(){render();}
+
+// ═══ RENDER FUNCTIONS ═══
+function renderHeader(){
+  return h("div",{style:{background:"linear-gradient(135deg,#FF6B1A,#BF360C)",color:"#fff",padding:"14px 16px",display:"flex",alignItems:"center",gap:"12px",boxShadow:"0 3px 12px rgba(0,0,0,0.2)"}},
+    [h("img",{src:PHOTO,style:{width:"44px",height:"44px",borderRadius:"50%",objectFit:"cover",border:"2px solid rgba(255,255,255,0.6)"}}),
+     h("div",{style:{flex:"1"}},
+       [h("div",{style:{fontSize:"15px",fontWeight:"900",letterSpacing:"0.5px"}},APP_TITLE),
+        h("div",{style:{fontSize:"11px",opacity:"0.85"}},"शिकूया • जाणूया • वाढूया 🌟")]),
+     h("div",{style:{fontSize:"11px",background:"rgba(255,255,255,0.15)",padding:"4px 8px",borderRadius:"10px",textAlign:"center"}},
+       [h("div",{style:{fontWeight:"800"}},"विवेक"),h("div",{},"सर")])]);
+}
+
+function renderNav(){
+  var tabs=[
+    {id:"main",icon:"🏠",l:"मुख्य"},{id:"swar",icon:"🔤",l:"स्वर"},{id:"vyanjan",icon:"🔡",l:"व्यंजन"},
+    {id:"barakhadi",icon:"📝",l:"बाराखडी"},{id:"shabd",icon:"📚",l:"शब्द"},{id:"vakye",icon:"💬",l:"वाक्ये"},
+    {id:"parichhed",icon:"📄",l:"परिच्छेद"},{id:"mhani",icon:"🌿",l:"म्हणी"},{id:"vakprachar",icon:"🗣️",l:"वाक्प्र."},
+    {id:"kavita",icon:"🎵",l:"कविता"},{id:"ank",icon:"🔢",l:"अंक"},{id:"quiz",icon:"🎮",l:"सराव"}
+  ];
+  return h("nav",{style:{display:"flex",overflowX:"auto",background:"linear-gradient(90deg,#BF360C,#FF6B1A)",padding:"6px 8px",gap:"4px",WebkitOverflowScrolling:"touch"}},
+    tabs.map(function(t){
+      var act=S.tab===t.id;
+      return h("button",{className:"nb"+(act?" act":""),onclick:function(){setTab(t.id);}},
+        [h("span",{style:{fontSize:"18px"}},t.icon),h("span",{},t.l)]);
+    }));
+}
+
+function renderMain(){
+  var cats=[
+    {icon:"🔤",t:"स्वर",id:"swar",c:"#FF6B35",d:"14 स्वर"},
+    {icon:"🔡",t:"व्यंजन",id:"vyanjan",c:"#E91E63",d:"36 व्यंजन"},
+    {icon:"📝",t:"बाराखडी",id:"barakhadi",c:"#9C27B0",d:"मात्रा"},
+    {icon:"📚",t:"शब्द",id:"shabd",c:"#2196F3",d:"1500+ शब्द"},
+    {icon:"💬",t:"वाक्ये",id:"vakye",c:"#4CAF50",d:"200+ वाक्ये"},
+    {icon:"📄",t:"परिच्छेद",id:"parichhed",c:"#FF9800",d:"20 परिच्छेद"},
+    {icon:"🌿",t:"म्हणी",id:"mhani",c:"#009688",d:"50 + मराठी अर्थ"},
+    {icon:"🗣️",t:"वाक्प्रचार",id:"vakprachar",c:"#795548",d:"50 + मराठी अर्थ"},
+    {icon:"🎵",t:"कविता",id:"kavita",c:"#AD1457",d:"30 कविता"},
+    {icon:"🔢",t:"अंक",id:"ank",c:"#5C6BC0",d:"0-99999"},
+    {icon:"🎮",t:"सराव",id:"quiz",c:"#BF360C",d:"30 प्रश्न"},
+  ];
+  return h("div",{style:{padding:"14px"}},
+    [h("div",{style:{background:"linear-gradient(135deg,#FF6B1A,#BF360C)",borderRadius:"18px",padding:"20px",marginBottom:"16px",color:"#fff",textAlign:"center",boxShadow:"0 6px 20px rgba(255,107,26,0.4)"}},
+      [h("img",{src:PHOTO,style:{width:"80px",height:"80px",borderRadius:"50%",objectFit:"cover",border:"3px solid rgba(255,255,255,0.7)",marginBottom:"10px",display:"block",margin:"0 auto 10px"}}),
+       h("div",{style:{fontSize:"22px",fontWeight:"900",marginBottom:"4px"}},"विवेक भंगाळे सरांचे"),
+       h("div",{style:{fontSize:"18px",fontWeight:"800",color:"#FFD54F"}},"🏮 शिकूया मराठी"),
+       h("div",{style:{fontSize:"12px",marginTop:"8px",opacity:"0.9"}},"मराठी शिका • आनंदाने • सहज")]),
+     h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px"}},
+       cats.map(function(c){
+         return h("div",{className:"c",style:{background:"white",borderRadius:"14px",padding:"14px",boxShadow:"0 2px 10px rgba(0,0,0,0.08)",borderLeft:"4px solid "+c.c},
+           onclick:function(){setTab(c.id);}},
+           [h("div",{style:{fontSize:"28px",marginBottom:"4px"}},c.icon),
+            h("div",{style:{fontWeight:"800",fontSize:"14px",color:"#333"}},c.t),
+            h("div",{style:{fontSize:"11px",color:"#888",marginTop:"2px"}},c.d)]);
+       }))]);
+}
+
+function renderSwar(){
+  return h("div",{style:{padding:"14px"}},
+    [h("div",{style:{fontSize:"18px",fontWeight:"900",marginBottom:"12px",color:"#BF360C"}},"🔤 मराठी स्वर"),
+     h("div",{style:{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"8px"}},
+       SWAR.map(function(s,i){
+         var id="sw"+i;
+         return h("div",{id:"c_"+id,className:"c"+(S.clicked===id?" p":""),
+           style:{background:"linear-gradient(135deg,#FF6B35,#BF360C)",borderRadius:"14px",padding:"14px",textAlign:"center",color:"#fff",boxShadow:"0 3px 10px rgba(255,107,53,0.3)"},
+           onclick:function(){tap(s.l+" "+s.w,id);}},
+           [h("div",{style:{fontSize:"42px",fontWeight:"900",lineHeight:"1"}},s.l),
+            h("div",{style:{fontSize:"11px",opacity:"0.8",marginTop:"2px"}},s.r),
+            h("div",{style:{fontSize:"16px",marginTop:"4px"}},s.e+" "+s.w)]);
+       }))]);
+}
+
+function renderVyanjan(){
+  var groups=["क","च","ट","त","प","य","श","जोड"];
+  return h("div",{style:{padding:"14px"}},
+    [h("div",{style:{fontSize:"18px",fontWeight:"900",marginBottom:"12px",color:"#BF360C"}},"🔡 मराठी व्यंजन"),
+     h("div",{},groups.map(function(g){
+       var vs=VYANJAN.filter(function(v){return v.g===g;});
+       return h("div",{style:{marginBottom:"12px"}},
+         [h("div",{style:{fontSize:"13px",fontWeight:"800",color:"#BF360C",marginBottom:"6px"}},g+" वर्ग"),
+          h("div",{style:{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:"6px"}},
+            vs.map(function(v,i){
+              var id="vy"+g+i;
+              return h("div",{id:"c_"+id,className:"c"+(S.clicked===id?" p":""),
+                style:{background:"linear-gradient(135deg,#E91E63,#880E4F)",borderRadius:"12px",padding:"10px",textAlign:"center",color:"#fff"},
+                onclick:function(){tap(v.l+" "+v.w,id);}},
+                [h("div",{style:{fontSize:"32px",fontWeight:"900"}},v.l),
+                 h("div",{style:{fontSize:"10px",opacity:"0.8"}},v.r),
+                 h("div",{style:{fontSize:"13px",marginTop:"2px"}},v.e)]);
+            }))]); }))]);
+}
+
+function renderBarakhadi(){
+  var VY=["क","ख","ग","घ","ङ","च","छ","ज","झ","ञ","ट","ठ","ड","ढ","ण","त","थ","द","ध","न","प","फ","ब","भ","म","य","र","ल","व","श","ष","स","ह","ळ","क्ष","ज्ञ"];
+  var sel = (S.bkSel !== undefined && S.bkSel !== null) ? S.bkSel : 0;
+  var v = VY[sel];
+
+  // Colors for each vyanjan button group
+  var grpColors = ["#e53935","#e53935","#e53935","#e53935","#e53935",
+    "#8e24aa","#8e24aa","#8e24aa","#8e24aa","#8e24aa",
+    "#1565c0","#1565c0","#1565c0","#1565c0","#1565c0",
+    "#2e7d32","#2e7d32","#2e7d32","#2e7d32","#2e7d32",
+    "#f57f17","#f57f17","#f57f17","#f57f17","#f57f17",
+    "#00838f","#00838f","#00838f","#00838f","#00838f",
+    "#5c6bc0","#5c6bc0","#5c6bc0","#5c6bc0","#5c6bc0",
+    "#bf360c"];
+  var cc = grpColors[sel] || "#BF360C";
+
+  // Top: vyanjan selector grid
+  var selectorGrid = h("div",{style:{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:"5px",marginBottom:"16px"}},
+    VY.map(function(ltr,i){
+      var active = i===sel;
+      var gc = grpColors[i]||"#BF360C";
+      return h("button",{
+        style:{background:active?gc:"#fff",color:active?"#fff":gc,
+          border:"2px solid "+gc,borderRadius:"10px",padding:"8px 2px",
+          fontSize:"18px",fontWeight:"900",cursor:"pointer",
+          boxShadow:active?"0 3px 10px rgba(0,0,0,0.25)":"none",
+          transition:"all 0.15s"},
+        onclick:function(){S.bkSel=i;S.clicked="";render();}
+      },ltr);
+    })
+  );
+
+  // Middle: big selected vyanjan display
+  var bigLetter = h("div",{style:{
+    background:"linear-gradient(135deg,"+cc+","+cc+"cc)",
+    borderRadius:"20px",padding:"18px 12px 12px",
+    marginBottom:"16px",textAlign:"center",
+    boxShadow:"0 6px 20px rgba(0,0,0,0.2)"}},
+    [h("div",{style:{fontSize:"11px",color:"rgba(255,255,255,0.8)",fontWeight:"700",marginBottom:"6px",letterSpacing:"1px"}},"📝 व्यंजन निवडा → बाराखडी पाहा"),
+     h("div",{style:{fontSize:"64px",fontWeight:"900",color:"#fff",lineHeight:"1.1",textShadow:"0 2px 8px rgba(0,0,0,0.3)"}},v),
+     h("div",{style:{fontSize:"13px",color:"rgba(255,255,255,0.9)",marginTop:"6px"}},MATRAS.map(function(m){return v+(m.s||"");}).join("  "))
+    ]
+  );
+
+  // Bottom: barakhadi cards - 2 per row, large
+  var matraCards = h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px"}},
+    MATRAS.map(function(m,mi){
+      var combo = v+(m.s||"");
+      var id = "bk_"+sel+"_"+mi;
+      var active = S.clicked===id;
+      return h("div",{
+        id:"c_"+id,
+        className:"c"+(active?" p":""),
+        style:{
+          background:active?cc:"#fff",
+          borderRadius:"16px",
+          padding:"14px 10px",
+          textAlign:"center",
+          boxShadow:active?"0 4px 16px rgba(0,0,0,0.2)":"0 2px 8px rgba(0,0,0,0.08)",
+          border:"2px solid "+(active?cc:"#eee"),
+          cursor:"pointer"
+        },
+        onclick:function(){speakSlow(combo,id);}
+      },
+      [h("div",{style:{fontSize:"11px",fontWeight:"700",color:active?"rgba(255,255,255,0.8)":cc,marginBottom:"4px"}},m.n+" ("+m.r+")"),
+       h("div",{style:{fontSize:"44px",fontWeight:"900",color:active?"#fff":cc,lineHeight:"1.1"}}),
+       h("div",{innerHTML:"<span style='font-size:44px;font-weight:900;color:"+(active?"#fff":cc)+";line-height:1.1'>"+combo+"</span>"}),
+       h("div",{style:{fontSize:"11px",color:active?"rgba(255,255,255,0.7)":"#999",marginTop:"4px"}},"🔊 ऐका")
+      ]);
+    })
+  );
+
+  return h("div",{style:{padding:"14px"}},
+    [h("div",{style:{fontSize:"18px",fontWeight:"900",marginBottom:"12px",color:"#BF360C"}},"📝 बाराखडी"),
+     selectorGrid,
+     bigLetter,
+     matraCards
+    ]);
+}
+
+function renderShabd(){
+  var cat=WORD_CATS[S.wordCat]||WORD_CATS[0];
+  return h("div",{style:{padding:"14px"}},
+    [h("div",{style:{fontSize:"18px",fontWeight:"900",marginBottom:"10px",color:"#BF360C"}},"📚 शब्दसंग्रह"),
+     h("div",{style:{display:"flex",flexWrap:"wrap",gap:"6px",marginBottom:"12px"}},
+       WORD_CATS.map(function(c,i){
+         return h("button",{className:"stab",style:{background:S.wordCat===i?c.color:"#fff",color:S.wordCat===i?"#fff":c.color,borderColor:c.color},
+           onclick:function(){S.wordCat=i;render();}},c.icon+" "+c.name);
+       })),
+     h("div",{style:{background:"linear-gradient(135deg,"+cat.color+","+cat.color+"cc)",borderRadius:"14px",padding:"12px",marginBottom:"12px",color:"#fff"}},
+       [h("div",{style:{fontSize:"28px"}},cat.icon),
+        h("div",{style:{fontSize:"18px",fontWeight:"900"}}," "+cat.name),
+        h("div",{style:{fontSize:"12px",opacity:"0.85"}},cat.words.length+" शब्द — click करा, आवाज ऐका 🔊")]),
+     h("div",{style:{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"8px"}},
+       cat.words.map(function(w,i){
+         var id="wd"+S.wordCat+"_"+i;
+         return h("div",{id:"c_"+id,className:"c"+(S.clicked===id?" p":""),
+           style:{background:S.clicked===id?cat.color:"#fff",borderRadius:"12px",padding:"10px",textAlign:"center",boxShadow:"0 2px 8px rgba(0,0,0,0.08)",border:"2px solid "+(S.clicked===id?cat.color:"#eee"),color:S.clicked===id?"#fff":"#333"},
+           onclick:function(){tap(w.w,id);}},
+           [h("div",{innerHTML:wordPic(w.w,w.e)}),
+            h("div",{style:{fontWeight:"800",fontSize:"14px",marginTop:"4px"}},w.w),
+            h("div",{style:{fontSize:"11px",opacity:"0.7",marginTop:"2px"}},w.m)]);
+       }))]);
+}
+
+function renderVakye(){
+  var levels=[1,2,3,4];
+  var sents=ALL_SENTENCES.filter(function(s){return s.lv===S.sentLevel;});
+  var colors={1:"#4CAF50",2:"#2196F3",3:"#9C27B0",4:"#BF360C"};
+  var labels={1:"स्तर १ - सोपे",2:"स्तर २ - मध्यम",3:"स्तर ३ - कठीण",4:"स्तर ४ - तज्ञ"};
+  return h("div",{style:{padding:"14px"}},
+    [h("div",{style:{fontSize:"18px",fontWeight:"900",marginBottom:"10px",color:"#BF360C"}},"💬 मराठी वाक्ये"),
+     h("div",{style:{display:"flex",gap:"6px",marginBottom:"12px",flexWrap:"wrap"}},
+       levels.map(function(lv){
+         return h("button",{className:"stab",style:{background:S.sentLevel===lv?colors[lv]:"#fff",color:S.sentLevel===lv?"#fff":colors[lv],borderColor:colors[lv]},
+           onclick:function(){S.sentLevel=lv;render();}},labels[lv]);
+       })),
+     h("div",{style:{display:"flex",flexDirection:"column",gap:"8px"}},
+       sents.map(function(s,i){
+         var id="sn"+S.sentLevel+"_"+i;
+         return h("div",{id:"c_"+id,className:"c"+(S.clicked===id?" p":""),
+           style:{background:"#fff",borderRadius:"14px",padding:"14px",boxShadow:"0 2px 10px rgba(0,0,0,0.07)",borderLeft:"4px solid "+colors[S.sentLevel]},
+           onclick:function(){tap(s.m,id);}},
+           [h("div",{style:{display:"flex",alignItems:"center",gap:"10px"}},
+             [h("div",{style:{fontSize:"28px"}},s.emoji),
+              h("div",{style:{flex:"1"}},
+                [h("div",{style:{fontSize:"17px",fontWeight:"800",color:"#222",lineHeight:"1.4"}},s.m),
+                 h("div",{style:{fontSize:"13px",color:"#666",marginTop:"4px",fontStyle:"italic"}},s.e)])])]);
+       }))]);
+}
+
+function renderParichhed(){
+  var levels=[1,2,3];
+  var paras=PARAGRAPHS.filter(function(p){return p.lv===S.paraLevel;});
+  var colors={1:"#FF9800",2:"#2196F3",3:"#9C27B0"};
+  var labels={1:"स्तर १ - सोपे",2:"स्तर २ - मध्यम",3:"स्तर ३ - प्रगत"};
+  return h("div",{style:{padding:"14px"}},
+    [h("div",{style:{fontSize:"18px",fontWeight:"900",marginBottom:"10px",color:"#BF360C"}},"📄 परिच्छेद"),
+     h("div",{style:{display:"flex",gap:"6px",marginBottom:"12px"}},
+       levels.map(function(lv){
+         return h("button",{className:"stab",style:{background:S.paraLevel===lv?colors[lv]:"#fff",color:S.paraLevel===lv?"#fff":colors[lv],borderColor:colors[lv]},
+           onclick:function(){S.paraLevel=lv;render();}},labels[lv]);
+       })),
+     h("div",{style:{display:"flex",flexDirection:"column",gap:"12px"}},
+       paras.map(function(p,i){
+         var id="pr"+S.paraLevel+"_"+i;
+         return h("div",{id:"c_"+id,className:"c"+(S.clicked===id?" p":""),
+           style:{background:"#fff",borderRadius:"16px",padding:"18px",boxShadow:"0 3px 14px rgba(0,0,0,0.09)",border:"2px solid "+(S.clicked===id?colors[S.paraLevel]:"#eee")},
+           onclick:function(){tap(p.text,id);}},
+           [h("div",{style:{display:"flex",alignItems:"center",gap:"10px",marginBottom:"12px"}},
+             [h("div",{style:{fontSize:"32px"}},p.e),
+              h("div",{},
+                [h("div",{style:{fontWeight:"900",fontSize:"17px",color:"#222"}},p.t),
+                 h("div",{style:{fontSize:"11px",color:colors[S.paraLevel],fontWeight:"700",marginTop:"2px"}},"🔊 Click करा")])]),
+            h("div",{style:{fontSize:"15px",lineHeight:"1.9",color:"#333",borderBottom:"1px solid #eee",paddingBottom:"10px",marginBottom:"10px"}},p.text),
+            h("div",{style:{fontSize:"13px",lineHeight:"1.7",color:"#666",fontStyle:"italic"}},p.eng)]);
+       }))]);
+}
+
+function renderMhani(){
+  return h("div",{style:{padding:"14px"}},
+    [h("div",{style:{fontSize:"18px",fontWeight:"900",marginBottom:"12px",color:"#BF360C"}},"🌿 म्हणी — "+MHANI.length+" म्हणी"),
+     h("div",{style:{display:"flex",flexDirection:"column",gap:"8px"}},
+       MHANI.map(function(m,i){
+         var id="mh"+i;
+         return h("div",{id:"c_"+id,className:"c"+(S.clicked===id?" p":""),
+           style:{background:"#fff",borderRadius:"14px",padding:"14px",boxShadow:"0 2px 10px rgba(0,0,0,0.07)",borderLeft:"5px solid #009688"},
+           onclick:function(){tap(m.m,id);}},
+           [h("div",{style:{display:"flex",alignItems:"flex-start",gap:"10px"}},
+             [h("div",{style:{fontSize:"26px",minWidth:"36px"}},m.emoji),
+              h("div",{style:{flex:"1"}},
+                [h("div",{style:{fontWeight:"900",fontSize:"16px",color:"#00695C",marginBottom:"6px"}},m.m),
+                 h("div",{style:{background:"#E0F2F1",borderRadius:"8px",padding:"6px 10px",fontSize:"13px",color:"#004D40",marginBottom:"5px"}},
+                   "📌 अर्थ: "+m.a),
+                 h("div",{style:{fontSize:"12px",color:"#888",fontStyle:"italic"}},m.e)])])]);
+       }))]);
+}
+
+function renderVakprachar(){
+  return h("div",{style:{padding:"14px"}},
+    [h("div",{style:{fontSize:"18px",fontWeight:"900",marginBottom:"12px",color:"#BF360C"}},"🗣️ वाक्प्रचार — "+VAKPRACHAR.length+" वाक्प्रचार"),
+     h("div",{style:{display:"flex",flexDirection:"column",gap:"8px"}},
+       VAKPRACHAR.map(function(v,i){
+         var id="vp"+i;
+         return h("div",{id:"c_"+id,className:"c"+(S.clicked===id?" p":""),
+           style:{background:"#fff",borderRadius:"14px",padding:"14px",boxShadow:"0 2px 10px rgba(0,0,0,0.07)",borderLeft:"5px solid #795548"},
+           onclick:function(){tap(v.m,id);}},
+           [h("div",{style:{display:"flex",alignItems:"flex-start",gap:"10px"}},
+             [h("div",{style:{fontSize:"26px",minWidth:"36px"}},v.emoji),
+              h("div",{style:{flex:"1"}},
+                [h("div",{style:{fontWeight:"900",fontSize:"16px",color:"#4E342E",marginBottom:"6px"}},v.m),
+                 h("div",{style:{background:"#EFEBE9",borderRadius:"8px",padding:"6px 10px",fontSize:"13px",color:"#3E2723",marginBottom:"5px"}},
+                   "📌 अर्थ: "+v.a),
+                 h("div",{style:{fontSize:"12px",color:"#888",fontStyle:"italic"}},v.e)])])]);
+       }))]);
+}
+
+function renderKavita(){
+  return h("div",{style:{padding:"14px"}},
+    [h("div",{style:{fontSize:"18px",fontWeight:"900",marginBottom:"12px",color:"#BF360C"}},"🎵 मराठी कविता — "+KAVITA.length+" कविता"),
+     h("div",{style:{display:"flex",flexDirection:"column",gap:"10px"}},
+       KAVITA.map(function(k,i){
+         var id="kv"+i;
+         return h("div",{id:"c_"+id,className:"c"+(S.clicked===id?" p":""),
+           style:{background:"linear-gradient(135deg,#AD1457,#6A1B9A)",borderRadius:"18px",padding:"18px",color:"#fff",boxShadow:"0 4px 16px rgba(173,20,87,0.3)"},
+           onclick:function(){tap(k.title+". "+k.lines,id);}},
+           [h("div",{style:{display:"flex",alignItems:"center",gap:"12px",marginBottom:"12px"}},
+             [h("div",{style:{fontSize:"32px"}},k.emoji),
+              h("div",{style:{flex:"1"}},
+                [h("div",{style:{color:"#FFD54F",fontSize:"11px",fontWeight:"700"}},"कविता / Poem"),
+                 h("div",{style:{fontSize:"20px",fontWeight:"900"}},k.title),
+                 h("div",{style:{fontSize:"12px",opacity:"0.8"}},"— "+k.kavi)]),
+              h("div",{style:{fontSize:"12px",opacity:"0.7"}},"🔊")]),
+            h("div",{style:{background:"rgba(0,0,0,0.2)",borderRadius:"10px",padding:"12px",marginBottom:"10px",whiteSpace:"pre-line",fontSize:"15px",lineHeight:"2",fontStyle:"italic"}},k.lines),
+           ]); // end kavita card
+       }))]);
+}
+
+function renderAnk(){
+  var range=numRanges[S.numRange]||numRanges["१-२०"];
+  return h("div",{style:{padding:"14px"}},
+    [h("div",{style:{fontSize:"18px",fontWeight:"900",marginBottom:"10px",color:"#BF360C"}},"🔢 मराठी अंक"),
+     h("div",{style:{display:"flex",flexWrap:"wrap",gap:"6px",marginBottom:"12px"}},
+       Object.keys(numRanges).map(function(r){
+         return h("button",{className:"stab",style:{background:S.numRange===r?"#5C6BC0":"#fff",color:S.numRange===r?"#fff":"#5C6BC0",borderColor:"#5C6BC0"},
+           onclick:function(){S.numRange=r;render();}},r);
+       })),
+     h("div",{style:{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"8px"}},
+       range.map(function(n,i){
+         var id="nk"+S.numRange+i;
+         return h("div",{id:"c_"+id,className:"c"+(S.clicked===id?" p":""),
+           style:{background:S.clicked===id?"#5C6BC0":"#fff",borderRadius:"12px",padding:"12px",textAlign:"center",boxShadow:"0 2px 8px rgba(0,0,0,0.07)",border:"2px solid "+(S.clicked===id?"#5C6BC0":"#eee"),color:S.clicked===id?"#fff":"#333"},
+           onclick:function(){tap(n.m,id);}},
+           [h("div",{style:{fontSize:"28px",fontWeight:"900"}},n.n),
+            h("div",{style:{fontSize:"16px",fontWeight:"800",marginTop:"4px"}},n.m)]);
+       }))]);
+}
+
+function renderQuiz(){
+  if(S.quizDone){
+    var pct=Math.round(S.quizScore/QUIZ.filter(function(q){return q.lv===S.quizLevel;}).length*100);
+    return h("div",{style:{padding:"20px",textAlign:"center"}},
+      [h("div",{style:{fontSize:"64px",margin:"20px 0"}},pct>=80?"🏆":pct>=50?"🌟":"💪"),
+       h("div",{style:{fontSize:"28px",fontWeight:"900",color:"#BF360C",marginBottom:"8px"}},"निकाल"),
+       h("div",{style:{fontSize:"20px",color:"#333",marginBottom:"20px"}},S.quizScore+" / "+QUIZ.filter(function(q){return q.lv===S.quizLevel;}).length+" गुण ("+pct+"%)"),
+       h("div",{style:{fontSize:"16px",color:pct>=80?"#4CAF50":pct>=50?"#FF9800":"#F44336",fontWeight:"800",marginBottom:"24px"}},pct>=80?"अत्युत्तम! शाब्बास!! 🎉":pct>=50?"चांगले! अजून सराव करा 👍":"पुन्हा प्रयत्न करा 💪"),
+       h("button",{style:{background:"linear-gradient(135deg,#BF360C,#FF6B1A)",color:"#fff",border:"none",borderRadius:"14px",padding:"14px 32px",fontSize:"18px",fontWeight:"800",cursor:"pointer"},
+         onclick:function(){S.quizIdx=0;S.quizScore=0;S.quizDone=false;render();}},
+         "🔄 पुन्हा खेळा")]);
+  }
+  var qs=QUIZ.filter(function(q){return q.lv===S.quizLevel;});
+  if(S.quizIdx>=qs.length){S.quizDone=true;render();return h("div",{});}
+  var q=qs[S.quizIdx];
+  var pct=(S.quizIdx/qs.length)*100;
+  return h("div",{style:{padding:"14px"}},
+    [h("div",{style:{fontSize:"18px",fontWeight:"900",marginBottom:"10px",color:"#BF360C"}},"🎮 मराठी सराव"),
+     h("div",{style:{display:"flex",gap:"6px",marginBottom:"12px"}},
+       [1,2,3].map(function(lv){
+         return h("button",{className:"stab",style:{background:S.quizLevel===lv?"#BF360C":"#fff",color:S.quizLevel===lv?"#fff":"#BF360C",borderColor:"#BF360C"},
+           onclick:function(){S.quizLevel=lv;S.quizIdx=0;S.quizScore=0;S.quizDone=false;render();}},
+           "स्तर "+lv);
+       })),
+     h("div",{style:{background:"#FFF3E0",borderRadius:"10px",padding:"8px 14px",marginBottom:"16px"}},
+       [h("div",{style:{display:"flex",justifyContent:"space-between",fontSize:"13px",color:"#BF360C",fontWeight:"700",marginBottom:"5px"}},
+         [h("span",{},"प्रश्न "+(S.quizIdx+1)+" / "+qs.length),h("span",{},"गुण: "+S.quizScore)]),
+        h("div",{className:"pbar"},h("div",{className:"pfill",style:{width:pct+"%",background:"linear-gradient(90deg,#FF6B1A,#BF360C)"}}))]),
+     h("div",{style:{background:"linear-gradient(135deg,#FF6B1A,#BF360C)",borderRadius:"18px",padding:"24px",marginBottom:"16px",textAlign:"center",color:"#fff",minHeight:"100px",display:"flex",alignItems:"center",justifyContent:"center"}},
+       h("div",{style:{fontSize:"22px",fontWeight:"900",lineHeight:"1.5"}},q.q)),
+     h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px"}},
+       q.opts.map(function(opt,idx){
+         return h("button",{style:{background:"#fff",border:"2px solid #ddd",borderRadius:"14px",padding:"14px",fontSize:"16px",fontWeight:"700",cursor:"pointer",transition:"all 0.15s",fontFamily:"inherit"},
+           onclick:function(){
+             if(idx===q.ans)S.quizScore++;
+             S.quizIdx++;
+             if(idx===q.ans){this.style.background="#4CAF50";this.style.color="#fff";this.style.borderColor="#4CAF50";}
+             else{this.style.background="#f44336";this.style.color="#fff";this.style.borderColor="#f44336";}
+             setTimeout(function(){render();},400);
+           }},opt);
+       }))]);
+}
+
+function render(){
+  var app=document.getElementById("app");
+  var content;
+  if(S.tab==="main")content=renderMain();
+  else if(S.tab==="swar")content=renderSwar();
+  else if(S.tab==="vyanjan")content=renderVyanjan();
+  else if(S.tab==="barakhadi")content=renderBarakhadi();
+  else if(S.tab==="shabd")content=renderShabd();
+  else if(S.tab==="vakye")content=renderVakye();
+  else if(S.tab==="parichhed")content=renderParichhed();
+  else if(S.tab==="mhani")content=renderMhani();
+  else if(S.tab==="vakprachar")content=renderVakprachar();
+  else if(S.tab==="kavita")content=renderKavita();
+  else if(S.tab==="ank")content=renderAnk();
+  else if(S.tab==="quiz")content=renderQuiz();
+  else content=renderMain();
+
+  var wrapper=h("div",{style:{maxWidth:"500px",margin:"0 auto",minHeight:"100vh",background:"#FFF8E7"}},
+    [renderHeader(),renderNav(),
+     h("div",{className:"fi",style:{paddingBottom:"80px"}},content)]);
+  app.innerHTML=""; app.appendChild(wrapper);
+}
+render();
+</script></body></html>
